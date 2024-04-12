@@ -1,9 +1,13 @@
+import MobaTimeSettings from "./MobaTimeSettings";
+
+
 interface TimeTrackerSettings {
     property_work_start: string;
     property_pause_start: string;
     property_pause_end: string;
     property_work_end: string;
     time_format: string;
+    moba: MobaTimeSettings;
 }
 
 const DEFAULT_SETTINGS: TimeTrackerSettings = {
@@ -12,7 +16,13 @@ const DEFAULT_SETTINGS: TimeTrackerSettings = {
     property_pause_start: 'pause_start',
     property_pause_end: 'pause_end',
     time_format: "HH:mm",
+    moba: {
+        url: "",
+        mandatorId: "",
+        employeeId: "",
+        ca: "",
+    },
 }
 
 export { DEFAULT_SETTINGS };
-export type { TimeTrackerSettings };
+export type { TimeTrackerSettings, MobaTimeSettings };

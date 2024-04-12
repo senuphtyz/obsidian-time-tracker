@@ -14,8 +14,6 @@ export default class TimeTrackerSettingTab extends PluginSettingTab {
 
 		containerEl.empty();
 
-		new Setting(containerEl).setHeading().setName("Time Tracker");
-
 		new Setting(containerEl)
 			.setName("Datetime format to use")
 			.setDesc("MomentJS format used to format time")
@@ -39,6 +37,7 @@ export default class TimeTrackerSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Property for work end')
+			.setDesc("test")
 			.addText(text => text
 				.setValue(this.plugin.settings.property_work_end)
 				.onChange(async (value) => {
@@ -63,5 +62,53 @@ export default class TimeTrackerSettingTab extends PluginSettingTab {
 					this.plugin.settings.property_work_end = value;
 					await this.plugin.saveSettings();
 				}));
+
+		new Setting(containerEl)
+			.setHeading()
+			.setName("MobaTime");
+
+		new Setting(containerEl)
+			.setName("URL")
+			.setDesc("Base URL for MobaTime")
+			.addText(text => text
+				.setValue(this.plugin.settings.moba.url)
+				.onChange(async (value) => {
+					this.plugin.settings.moba.url = value;
+					await this.plugin.saveSettings();
+				})
+			)
+
+		new Setting(containerEl)
+			.setName("MandatorId")
+			.setDesc("MandatorId for MobaTime to authenticate")
+			.addText(text => text
+				.setValue(this.plugin.settings.moba.mandatorId)
+				.onChange(async (value) => {
+					this.plugin.settings.moba.mandatorId = value;
+					await this.plugin.saveSettings();
+				})
+			)
+
+			new Setting(containerEl)
+			.setName("EmployeeId")
+			.setDesc("EmployeeId for MobaTime to authenticate")
+			.addText(text => text
+				.setValue(this.plugin.settings.moba.employeeId)
+				.onChange(async (value) => {
+					this.plugin.settings.moba.employeeId = value;
+					await this.plugin.saveSettings();
+				})
+			)			
+
+		new Setting(containerEl)
+			.setName("CA")
+			.setDesc("CA to trust")
+			.addTextArea(text => text
+				.setValue(this.plugin.settings.moba.ca)
+				.onChange(async (value) => {
+					this.plugin.settings.moba.ca = value;
+					await this.plugin.saveSettings();
+				})
+			)
 	}
 }
