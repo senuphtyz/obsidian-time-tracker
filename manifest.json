@@ -1,0 +1,11 @@
+{
+	"id": "time-tracker",
+	"name": "Time Tracker Plugin",
+	"version": "1.0.0",
+	"minAppVersion": "0.15.0",
+	"description": "Track times using daily notes.",
+	"author": "Bruno Lorenz <b.lorenz-github@afterspring.org>",
+	"authorUrl": "https://github.com/senuphtyz",
+	"fundingUrl": "https://buymeacoffee.com/senuphtyz",
+	"isDesktopOnly": false
+}
