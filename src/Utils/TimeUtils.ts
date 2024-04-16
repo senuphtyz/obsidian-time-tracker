@@ -16,7 +16,6 @@ export function calculateWorkTimeOfFile(app: App, file: TFile | null, settings: 
     return calculateWorkTime(getWorkTimesOfFile(app, file, settings))
 }
 
-
 /**
  * Calculates work time for given times.
  * 
@@ -37,9 +36,11 @@ export function calculateWorkTime(wt: WorkTimes): string {
         )
     }
 
-    let f = moment.utc(diff.asMilliseconds()).format("HH:mm");
-    return "🕑 " + f;
+    const hours = diff.asHours();
+
+    return `🕑 ${(hours | 0).toString().padStart(2, '0')}:${(Math.round(hours % 1 * 60)).toString().padStart(2, '0')}`;
 }
+
 
 /**
  * Builds a full date of given time and file.
