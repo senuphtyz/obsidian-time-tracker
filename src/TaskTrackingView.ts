@@ -1,6 +1,8 @@
 import { ItemView, WorkspaceLeaf } from "obsidian";
 import { getAPI } from "obsidian-dataview";
-import TaskListComponent from "./Components/TaskListComponent.svelte";
+import TaskListComponent from "./UI/TaskListComponent.svelte";
+import type { Task } from "./Types/Task";
+import obsidianView from "./UI/ObsidianStore";
 
 export const VIEW_TYPE = "time-tracker-task-tracking-view";
 
@@ -26,11 +28,12 @@ export class TaskTrackingView extends ItemView {
         const api = getAPI();
         container.empty();
 
-        const tasks = api.pages().file.tasks.values.filter(t => !t.completed);
+        const tasks = api.pages().file.tasks.values.filter((t: Task) => !t.completed);
 
+        obsidianView.set(this);
         this.taskListComponent = new TaskListComponent({
             target: this.contentEl,
-            props: { app: this.app, component: this, tasks: tasks.slice(0, 5) }
+            props: { tasks: tasks.slice(0, 5) }
         });
     }
 

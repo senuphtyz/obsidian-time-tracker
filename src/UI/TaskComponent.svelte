@@ -1,12 +1,11 @@
 <script lang="ts">
 	import { Play } from "lucide-svelte";
-	import { MarkdownRenderer, type App, Component } from "obsidian";
 	import type { Task } from "src/Types/Task";
 	import { State, type TaskTrackingEvent } from "src/Types/TaskTrackingEvent";
 	import { createEventDispatcher } from "svelte";
+	import { renderMarkdown } from "./Markdown";
+	import obsidianView from "./ObsidianStore";
 
-	export let app: App;
-	export let component: Component;
 	export let task: Task;
 	export let disabled: boolean = false;
 
@@ -20,28 +19,17 @@
 			currentState: State.STOPPED,
 		});
 	}
-
-	function render(node: HTMLDivElement) {
-		MarkdownRenderer.render(
-			app,
-			task.text,
-			node,
-			task.path,
-			component,
-		).then(() => {
-			const paragraph = node.firstChild;
-
-			if (paragraph != null) {
-				// @ts-ignore
-				node.append(...paragraph.childNodes);
-				paragraph.remove();
-			}
-		});
-	}
 </script>
 
 <div class="task-component">
-	<div class="text" use:render></div>
+	<div
+		class="text"
+		use:renderMarkdown={{
+			view: $obsidianView,
+			text: task.text,
+			path: task.path,
+		}}
+	></div>
 	<button on:click={start} {disabled}>
 		<Play
 			size="18"
@@ -61,7 +49,7 @@
 		margin: 10px 0;
 
 		&:hover {
-			background-color: var(--interactive-accent);
+			background-color: var(--interactive-hover);
 		}
 
 		.text {
@@ -70,11 +58,6 @@
 			overflow: hidden;
 			white-space: nowrap; /* Don't forget this one */
 			text-overflow: ellipsis;
-
-			p {
-				margin: 0;
-				padding: 0;
-			}
 		}
 
 		button {

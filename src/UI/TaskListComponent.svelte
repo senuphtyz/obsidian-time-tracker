@@ -4,10 +4,7 @@
 	import TaskComponent from "./TaskComponent.svelte";
 	import { State, type TaskTrackingEvent } from "src/Types/TaskTrackingEvent";
 	import { flip } from "svelte/animate";
-	import type { App, Component } from "obsidian";
 
-	export let app: App;
-	export let component: Component;
 	export let tasks: Task[];
 
 	function startStop(e: CustomEvent<TaskTrackingEvent>) {
@@ -29,9 +26,9 @@
 	{#each tasks as t, idx (t)}
 		<div animate:flip={{ duration: 400 }}>
 			{#if idx == 0}
-				<ActiveTaskComponent {app} {component} task={t} on:startStop={startStop} disabled={t.completed}/>
+				<ActiveTaskComponent task={t} on:startStop={startStop} disabled={t.completed}/>
 			{:else}
-				<TaskComponent {app} {component} task={t} on:startStop={startStop} disabled={t.completed}/>
+				<TaskComponent task={t} on:startStop={startStop} disabled={t.completed}/>
 			{/if}
 		</div>
 	{/each}

@@ -10,9 +10,9 @@ export interface Task {
     line: number;
     lineCount: number;
     list: number;
-    outlinks: any[];
+    outlinks: [];
     path: string;
-    children: any[];
+    children: [];
     task: boolean;
     annotated: boolean;
     position: {

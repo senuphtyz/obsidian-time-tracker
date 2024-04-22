@@ -1,7 +1,8 @@
-import { App, TFile, moment } from "obsidian";
-import { TimeTrackerSettings } from "../Types/TimeTrackerSettings";
+import { App, TFile } from "obsidian";
+import type { TimeTrackerSettings } from "../Types/TimeTrackerSettings";
 import { getDailyNoteSettings, getFrontMatter } from "./NoteUtils";
-import WorkTimes from "../Types/WorkTimes";
+import type WorkTimes from "../Types/WorkTimes";
+import moment from "moment";
 
 /**
  * Calculates work time for frontmatter of given file.
@@ -27,7 +28,7 @@ export function calculateWorkTime(wt: WorkTimes): string {
     }
 
     const start = moment.duration(wt.work_start);
-    const end = !!wt.work_end ? moment.duration(wt.work_end) : moment.duration(moment().format("HH:mm"));
+    const end = wt.work_end ? moment.duration(wt.work_end) : moment.duration(moment().format("HH:mm"));
     let diff = end.subtract(start)
 
     if (!!wt.pause_start && !!wt.pause_end) {

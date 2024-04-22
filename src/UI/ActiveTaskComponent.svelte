@@ -1,16 +1,28 @@
 <script lang="ts">
-	import { Timer, Play, Pause, CalendarClock } from "lucide-svelte";
-	import { App, Component, MarkdownRenderer } from "obsidian";
+	import moment, { type Moment } from "moment";
+	import { Timer, Play, Pause, CalendarClock, Ticket } from "lucide-svelte";
 	import type { Task } from "src/Types/Task";
 	import { State, type TaskTrackingEvent } from "src/Types/TaskTrackingEvent";
 	import { createEventDispatcher } from "svelte";
+	import { renderMarkdown } from "./Markdown";
+	import obsidianView from "./ObsidianStore";
 
-	export let app: App;
-	export let component: Component;
 	export let task: Task;
 	export let running: boolean = true;
 	export let disabled: boolean = false;
-	export let timerStartTime: string = "17:44";
+	export let start: string = "2024-04-22 08:00";
+	export let lastStart: string = "2024-04-21 08:00";
+	export let lastStop: string = "2024-04-21 10:30";
+
+	let timer: string = "";
+	let clear: string | number | NodeJS.Timeout | undefined;
+	const lStart: Moment = moment(lastStart, "YYYY-MM-DD HH:mm");
+	const lStop: Moment = moment(lastStop, "YYYY-MM-DD HH:mm");
+
+	$: {
+		clearInterval(clear);
+		clear = setInterval(tick, 60000); // 1 min
+	}
 
 	const dispatch = createEventDispatcher<{
 		startStop: TaskTrackingEvent;
@@ -18,6 +30,7 @@
 
 	function startStop() {
 		running = !running;
+		tick();
 
 		dispatch("startStop", {
 			task: task,
@@ -25,29 +38,40 @@
 		});
 	}
 
-	function render(node: HTMLDivElement) {
-		MarkdownRenderer.render(
-			app,
-			task.text,
-			node,
-			task.path,
-			component,
-		).then(() => {
-			const paragraph = node.firstChild;
+	function tick() {
+		if (!running) {
+			timer = "";
+			return;
+		}
+		const c = moment();
+		const s = moment(start, "YYYY-MM-DD HH:mm");
+		const d = c.diff(s);
+		const ms = d / 1000;
 
-			if (paragraph != null) {
-				// @ts-ignore
-				node.append(...paragraph.childNodes);
-				paragraph.remove();
-			}
-		});
+		timer = `${((ms / 3600) | 0).toString().padStart(2, "0")}:${((((ms / 3600) % 1) * 60) | 0).toString().padStart(2, "0")}`;
 	}
+
+	tick();
 </script>
 
 <div class="active-task">
-	<div class="task" use:render></div>
+	<div
+		class="task"
+		use:renderMarkdown={{
+			view: $obsidianView,
+			text: task.text,
+			path: task.path,
+		}}
+	></div>
 	<div class="attributes">
-		<div class="path">{task.path}</div>
+		<div
+			class="path"
+			use:renderMarkdown={{
+				view: $obsidianView,
+				text: task.path,
+				path: task.path,
+			}}
+		></div>
 		<div class="tags">
 			{#each task.tags as name}
 				<span class="tag">{name}</span>
@@ -56,13 +80,27 @@
 	</div>
 	<div class="footer">
 		<div class="last-tracked">
-			<CalendarClock size="18" style="margin-bottom: -2px" />
-			<span>19.04.2024</span>
-			<span>09:45 → 10:30</span>
+			<CalendarClock
+				size="18"
+				style="margin-bottom: -2px"
+				color="var(--interactive-accent)"
+				strokeWidth="2px"
+			/>
+
+			<span>{lStart.format("DD.MM.YYYY HH:mm")}</span>
+			<span>→</span>
+			<span>{lStop.format(lStart.isSame(lStop, "day") ? 'HH:mm' : 'DD.MM.YYYY HH:mm')}</span>
 		</div>
 		<div class="timer">
-			<Timer size="18" style="margin-bottom: -2px" />
-			<span>{timerStartTime}</span>
+			{#if timer != ""}
+				<Timer
+					size="18"
+					style="margin-bottom: -2px"
+					color="var(--interactive-accent)"
+					strokeWidth="2px"
+				/>
+				<span>{timer}</span>
+			{/if}
 		</div>
 		<div class="action">
 			<button on:click={startStop} {disabled}>
@@ -91,6 +129,10 @@
 		background: var(--background-primary);
 		padding: 5px;
 
+		&:hover {
+			background-color: var(--interactive-hover);
+		}
+
 		.task {
 			font-size: 1em;
 			font-weight: bold;
@@ -98,7 +140,7 @@
 		}
 
 		.attributes {
-			padding: 2px 10px;
+			padding: 5px 10px;
 
 			.path {
 				font-size: var(--font-ui-small);
@@ -140,6 +182,7 @@
 			}
 
 			.action {
+				padding: 2px 0;
 				background-color: var(--button-background);
 				// padding: 2px 10px;
 
