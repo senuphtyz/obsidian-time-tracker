@@ -1,5 +1,6 @@
 import type { View } from "obsidian";
+import type { TimeTrackerSettings } from "src/Types/TimeTrackerSettings";
 import { writable } from "svelte/store";
 
-const obsidianView = writable<View>();
-export default obsidianView; 
+export const obsidianView = writable<View>();
+export const obsidianSettings = writable<TimeTrackerSettings>();

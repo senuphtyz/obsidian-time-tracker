@@ -1,6 +1,6 @@
 import { Plugin, WorkspaceLeaf } from 'obsidian';
 import TimeTrackerSettingTab from "./TimeTrackerSettingTab";
-import { DEFAULT_SETTINGS, TimeTrackerSettings } from './Types/TimeTrackerSettings';
+import { DEFAULT_SETTINGS, type TimeTrackerSettings } from './Types/TimeTrackerSettings';
 import StatusBarTime from './StatusBarTime';
 import CommandHandler from './CommandHandler';
 import { TaskTrackingView, VIEW_TYPE } from './TaskTrackingView';
@@ -23,7 +23,7 @@ export default class TimeTrackerPlugin extends Plugin {
 	async onload() {
 		await this.loadSettings();
 
-		this.registerView(VIEW_TYPE, (leaf) => new TaskTrackingView(leaf));
+		this.registerView(VIEW_TYPE, (leaf) => new TaskTrackingView(leaf, this));
 		this.statusBar = new StatusBarTime(this.app, this);
 		this.commandHandler = new CommandHandler(this.app, this);
 		this.addSettingTab(new TimeTrackerSettingTab(this.app, this));

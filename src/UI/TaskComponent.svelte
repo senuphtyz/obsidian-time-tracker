@@ -4,7 +4,7 @@
 	import { State, type TaskTrackingEvent } from "src/Types/TaskTrackingEvent";
 	import { createEventDispatcher } from "svelte";
 	import { renderMarkdown } from "./Markdown";
-	import obsidianView from "./ObsidianStore";
+	import { obsidianView } from "./ObsidianStore";
 
 	export let task: Task;
 	export let disabled: boolean = false;

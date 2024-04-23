@@ -1,4 +1,4 @@
-import MobaTimeSettings from "./MobaTimeSettings";
+import type MobaTimeSettings from "./MobaTimeSettings";
 
 
 interface TimeTrackerSettings {
@@ -7,6 +7,8 @@ interface TimeTrackerSettings {
     property_pause_end: string;
     property_work_end: string;
     time_format: string;
+    date_format: string;
+    datetime_format: string;
     moba: MobaTimeSettings;
 }
 
@@ -16,6 +18,8 @@ const DEFAULT_SETTINGS: TimeTrackerSettings = {
     property_pause_start: 'pause_start',
     property_pause_end: 'pause_end',
     time_format: "HH:mm",
+    date_format: "DD.MM.YYYY",
+    datetime_format: "DD.MM.YYYY HH:mm",
     moba: {
         enabled: false,
         url: "",

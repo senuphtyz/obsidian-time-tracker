@@ -1,18 +1,22 @@
 import { ItemView, WorkspaceLeaf } from "obsidian";
 import { getAPI } from "obsidian-dataview";
 import TaskListComponent from "./UI/TaskListComponent.svelte";
+import { TaskTrackingService } from "./TaskTrackingService/TaskTrackingService";
 import type { Task } from "./Types/Task";
-import obsidianView from "./UI/ObsidianStore";
+import { obsidianView, obsidianSettings } from "./UI/ObsidianStore";
+import type TimeTrackerPlugin from "./TimeTrackerPlugin";
 
 export const VIEW_TYPE = "time-tracker-task-tracking-view";
 
 export class TaskTrackingView extends ItemView {
     taskListComponent: TaskListComponent | null;
+    public taskTrackingService: TaskTrackingService;
 
-    constructor(leaf: WorkspaceLeaf) {
+    constructor(leaf: WorkspaceLeaf, private plugin: TimeTrackerPlugin) {
         super(leaf);
 
         this.taskListComponent = null;
+        this.taskTrackingService = new TaskTrackingService(plugin);
     }
 
     getViewType(): string {
@@ -31,6 +35,8 @@ export class TaskTrackingView extends ItemView {
         const tasks = api.pages().file.tasks.values.filter((t: Task) => !t.completed);
 
         obsidianView.set(this);
+        obsidianSettings.set(this.plugin.settings);
+
         this.taskListComponent = new TaskListComponent({
             target: this.contentEl,
             props: { tasks: tasks.slice(0, 5) }

@@ -1,23 +1,24 @@
 <script lang="ts">
 	import moment, { type Moment } from "moment";
-	import { Timer, Play, Pause, CalendarClock, Ticket } from "lucide-svelte";
+	import { Timer, Play, Pause, CalendarClock } from "lucide-svelte";
 	import type { Task } from "src/Types/Task";
 	import { State, type TaskTrackingEvent } from "src/Types/TaskTrackingEvent";
 	import { createEventDispatcher } from "svelte";
 	import { renderMarkdown } from "./Markdown";
-	import obsidianView from "./ObsidianStore";
+	import { obsidianView, obsidianSettings } from "./ObsidianStore";
 
 	export let task: Task;
 	export let running: boolean = true;
 	export let disabled: boolean = false;
 	export let start: string = "2024-04-22 08:00";
-	export let lastStart: string = "2024-04-21 08:00";
-	export let lastStop: string = "2024-04-21 10:30";
+	export let lastStart: string | undefined;
+	export let lastStop: string | undefined;
 
 	let timer: string = "";
 	let clear: string | number | NodeJS.Timeout | undefined;
-	const lStart: Moment = moment(lastStart, "YYYY-MM-DD HH:mm");
-	const lStop: Moment = moment(lastStop, "YYYY-MM-DD HH:mm");
+
+	$: lStart = lastStart ? moment(lastStart, "YYYY-MM-DD HH:mm"): null;
+	$: lStop = lastStop ? moment(lastStop, "YYYY-MM-DD HH:mm"): null;
 
 	$: {
 		clearInterval(clear);
@@ -80,6 +81,7 @@
 	</div>
 	<div class="footer">
 		<div class="last-tracked">
+			{#if lStart && lStop}
 			<CalendarClock
 				size="18"
 				style="margin-bottom: -2px"
@@ -87,9 +89,16 @@
 				strokeWidth="2px"
 			/>
 
-			<span>{lStart.format("DD.MM.YYYY HH:mm")}</span>
+			<span>{lStart?.format($obsidianSettings.datetime_format)}</span>
 			<span>→</span>
-			<span>{lStop.format(lStart.isSame(lStop, "day") ? 'HH:mm' : 'DD.MM.YYYY HH:mm')}</span>
+			<span
+				>{lStop?.format(
+					lStart?.isSame(lStop, "day")
+						? $obsidianSettings.time_format
+						: $obsidianSettings.datetime_format,
+				)}</span
+			>
+			{/if}
 		</div>
 		<div class="timer">
 			{#if timer != ""}

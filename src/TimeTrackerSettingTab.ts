@@ -1,5 +1,6 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
 import TimeTrackerPlugin from "./TimeTrackerPlugin";
+import { DEFAULT_SETTINGS } from "./Types/TimeTrackerSettings";
 
 export default class TimeTrackerSettingTab extends PluginSettingTab {
 	plugin: TimeTrackerPlugin;
@@ -15,13 +16,37 @@ export default class TimeTrackerSettingTab extends PluginSettingTab {
 		containerEl.empty();
 
 		new Setting(containerEl)
-			.setName("Datetime format to use")
+			.setName("Time format to use")
 			.setDesc("MomentJS format used to format time")
 			.addMomentFormat(fmt => fmt
-				.setDefaultFormat("HH:mm")
+				.setDefaultFormat(DEFAULT_SETTINGS.time_format)
 				.setValue(this.plugin.settings.time_format)
 				.onChange(async (value) => {
 					this.plugin.settings.time_format = value;
+					await this.plugin.saveSettings();
+				})
+			)
+
+		new Setting(containerEl)
+			.setName("Date format to use")
+			.setDesc("MomentJS format used to format date")
+			.addMomentFormat(fmt => fmt
+				.setDefaultFormat(DEFAULT_SETTINGS.date_format)
+				.setValue(this.plugin.settings.date_format)
+				.onChange(async (value) => {
+					this.plugin.settings.date_format = value;
+					await this.plugin.saveSettings();
+				})
+			)
+
+		new Setting(containerEl)
+			.setName("Datetime format to use")
+			.setDesc("MomentJS format used to format time")
+			.addMomentFormat(fmt => fmt
+				.setDefaultFormat(DEFAULT_SETTINGS.datetime_format)
+				.setValue(this.plugin.settings.datetime_format)
+				.onChange(async (value) => {
+					this.plugin.settings.datetime_format = value;
 					await this.plugin.saveSettings();
 				})
 			)

@@ -4,6 +4,8 @@
 	import TaskComponent from "./TaskComponent.svelte";
 	import { State, type TaskTrackingEvent } from "src/Types/TaskTrackingEvent";
 	import { flip } from "svelte/animate";
+	import { obsidianView } from "./ObsidianStore";
+	import type { TaskTrackingView } from "src/TaskTrackingView";
 
 	export let tasks: Task[];
 
@@ -20,13 +22,15 @@
 		tasks = tasks;
 		console.info(tasks);
 	}
+
+	$: last = ($obsidianView as TaskTrackingView).taskTrackingService.findLastTrackedTaskTime(tasks[0].text);
 </script>
 
 <div class="task-component-list">
 	{#each tasks as t, idx (t)}
 		<div animate:flip={{ duration: 400 }}>
 			{#if idx == 0}
-				<ActiveTaskComponent task={t} on:startStop={startStop} disabled={t.completed}/>
+				<ActiveTaskComponent task={t} on:startStop={startStop} disabled={t.completed} lastStart={last?.start} lastStop={last?.end} />
 			{:else}
 				<TaskComponent task={t} on:startStop={startStop} disabled={t.completed}/>
 			{/if}
