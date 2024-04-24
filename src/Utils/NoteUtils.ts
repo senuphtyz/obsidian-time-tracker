@@ -1,12 +1,13 @@
-import { App, FrontMatterCache, TFile, moment } from "obsidian";
-import DailyNoteSettings from "../Types/DailyNoteSettings";
+import { App, type FrontMatterCache, TFile } from "obsidian";
+import type DailyNoteSettings from "../Types/DailyNoteSettings";
+import moment from "moment";
 
 /**
  * Get settings of daily note plugin.
  */
 export function getDailyNoteSettings(app: App): DailyNoteSettings {
     // @ts-ignore
-    const internalPlugins: any = app["internalPlugins"];
+    const internalPlugins = app["internalPlugins"];
 
     const { folder, format, template } =
         internalPlugins.getPluginById("daily-notes")?.instance?.options || {};
@@ -73,7 +74,7 @@ export async function setCurrentTimeToProperty(app: App, property: string): Prom
         return false;
     }
 
-    await app.fileManager.processFrontMatter(dailyNote, (fm: any) => {
+    await app.fileManager.processFrontMatter(dailyNote, (fm: FrontMatterCache) => {
         let currentTime = moment();
         currentTime = currentTime.seconds(0).minutes(
             currentTime.seconds(0).minutes() - (currentTime.seconds(0).minutes() % 15)

@@ -1,4 +1,4 @@
-import { App, Command } from "obsidian";
+import { App, type Command } from "obsidian";
 import TimeTrackerPlugin from "./TimeTrackerPlugin";
 import MobaTimeClient from "./MobaTimeClient/MobaTimeClient";
 import { findDailyNoteOfToday, setCurrentTimeToProperty } from "./Utils/NoteUtils";
@@ -71,10 +71,11 @@ export default class CommandHandler {
      */
     private buildPropertyCallback(property: string) {
         const app = this.app;
+        const plugin = this.plugin;
 
         return async function () {
             await setCurrentTimeToProperty(app, property);
-            this.plugin.updateView();
+            plugin.updateView();
         }
     }
 }

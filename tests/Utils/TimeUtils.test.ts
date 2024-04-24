@@ -1,6 +1,6 @@
-import { jest, describe, test, expect } from "@jest/globals";
+import { describe, test, expect } from "@jest/globals";
 import { calculateWorkTime } from "../../src/Utils/TimeUtils";
-import WorkTimes from "../../src/Types/WorkTimes";
+import type WorkTimes from "../../src/Types/WorkTimes";
 
 interface TestCase {
     id: string;
@@ -45,7 +45,7 @@ describe('Validate work time calucation', () => {
             id: "with minute exact times #2",
             times: { work_start: "8:32", work_end: "10:31", pause_start: null, pause_end: null, },
             expected: "🕑 01:59"
-        }   
+        }
     ];
 
     for (const tc of testCases) {

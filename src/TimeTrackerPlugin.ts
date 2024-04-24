@@ -9,15 +9,15 @@ import { TaskTrackingView, VIEW_TYPE } from './TaskTrackingView';
  * Main entry point for obsidian.
  */
 export default class TimeTrackerPlugin extends Plugin {
-	public settings: TimeTrackerSettings;
-	private statusBar: StatusBarTime;
-	private commandHandler: CommandHandler;
+	public settings: TimeTrackerSettings = DEFAULT_SETTINGS;
+	private statusBar: StatusBarTime | undefined;
+	private commandHandler: CommandHandler | undefined;
 
 	/**
 	 * Update all view members after changes.
 	 */
 	updateView() {
-		this.statusBar.update();
+		this.statusBar?.update();
 	}
 
 	async onload() {
@@ -31,7 +31,7 @@ export default class TimeTrackerPlugin extends Plugin {
 		this.commandHandler.register();
 		this.addRibbonIcon("dice", "Activate view", () => {
 			this.activateView();
-		});		
+		});
 	}
 
 	onunload() {

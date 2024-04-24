@@ -1,9 +1,10 @@
-import { App, TFile, moment, requestUrl } from "obsidian";
+import { App, TFile, requestUrl } from "obsidian";
 import MobaTimeCredentialsModal from "./MobaTimeCredentialsModal";
 import { getWorkTimesOfFile } from "../Utils/TimeUtils";
-import { TimeTrackerSettings } from "../Types/TimeTrackerSettings";
-import { MobaTimeEntry } from "./MobaTimeEntry";
+import { type TimeTrackerSettings } from "../Types/TimeTrackerSettings";
+import { type MobaTimeEntry } from "./MobaTimeEntry";
 import { EntryCode } from "./EntryCode";
+import moment from "moment";
 
 export default class MobaTimeClient {
     constructor(

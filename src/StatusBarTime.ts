@@ -1,4 +1,4 @@
-import { App, CachedMetadata, Plugin, TFile } from "obsidian";
+import { App, type CachedMetadata, TFile } from "obsidian";
 import { findDailyNoteOfToday, isDailyNote } from "./Utils/NoteUtils";
 import TimeTrackerPlugin from "./TimeTrackerPlugin";
 import { calculateWorkTimeOfFile } from "./Utils/TimeUtils";
