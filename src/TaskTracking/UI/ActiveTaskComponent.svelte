@@ -1,8 +1,10 @@
 <script lang="ts">
-	import moment, { type Moment } from "moment";
-	import { Timer, Play, Pause, CalendarClock } from "lucide-svelte";
-	import type { Task } from "src/TaskTracking/Types/Task";
-	import { State, type TaskTrackingEvent } from "src/TaskTracking/UI/TaskTrackingEvent";
+	import moment from "moment";
+	import { Timer, Pause, CalendarClock } from "lucide-svelte";
+	import {
+		State,
+		type TaskTrackingEvent,
+	} from "src/TaskTracking/UI/TaskTrackingEvent";
 	import { createEventDispatcher } from "svelte";
 	import { renderMarkdown } from "./Markdown";
 	import { obsidianView, obsidianSettings } from "./ObsidianStore";
@@ -26,10 +28,10 @@
 	function startStop() {
 		tick();
 
-		// dispatch("startStop", {
-		// 	task: task,
-		// 	currentState: running ? State.TRACKING : State.STOPPED,
-		// });
+		dispatch("startStop", {
+			task: task,
+			currentState: State.TRACKING,
+		});
 	}
 
 	function tick() {
@@ -43,6 +45,7 @@
 
 	tick();
 </script>
+
 
 <div class="active-task">
 	<div
@@ -58,7 +61,7 @@
 			class="path"
 			use:renderMarkdown={{
 				view: $obsidianView,
-				text: task.path,
+				text:task.path,
 				path: task.path,
 			}}
 		></div>
@@ -70,24 +73,26 @@
 	</div>
 	<div class="footer">
 		<div class="last-tracked">
-			<!-- {#if lStart && lStop}
-			<CalendarClock
-				size="18"
-				style="margin-bottom: -2px"
-				color="var(--interactive-accent)"
-				strokeWidth="2px"
-			/>
+			{#if task.last}
+				<CalendarClock
+					size="18"
+					style="margin-bottom: -2px"
+					color="var(--interactive-accent)"
+					strokeWidth="2px"
+				/>
 
-			<span>{lStart?.format($obsidianSettings.datetime_format)}</span>
-			<span>→</span>
-			<span
-				>{lStop?.format(
-					lStart?.isSame(lStop, "day")
-						? $obsidianSettings.time_format
-						: $obsidianSettings.datetime_format,
-				)}</span
-			>
-			{/if} -->
+				<span
+					>{moment(task.last.start, "YYYY-MM-DD HH:mm").format(
+						$obsidianSettings.datetime_format,
+					)}</span
+				>
+				<span>→</span>
+				<span
+					>{moment(task.last.end, "YYYY-MM-DD HH:mm").format(
+						$obsidianSettings.time_format,
+					)}</span
+				>
+			{/if}
 		</div>
 		<div class="timer">
 			{#if timer != ""}

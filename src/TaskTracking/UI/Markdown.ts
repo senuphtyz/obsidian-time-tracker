@@ -17,4 +17,20 @@ export function renderMarkdown(node: HTMLElement, options: RenderOptions) {
             paragraph.remove();
         }
     });
+
+    return {
+        update(options: RenderOptions) {
+            node.empty();
+            
+            MarkdownRenderer.render(options.view.app, options.text, node, options.path, options.view).then(() => {
+                const paragraph = node.firstChild;
+
+                if (paragraph != null) {
+                    // @ts-ignore
+                    node.append(...paragraph.childNodes);
+                    paragraph.remove();
+                }
+            });
+        }
+    }
 }

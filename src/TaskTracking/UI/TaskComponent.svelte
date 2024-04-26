@@ -1,7 +1,10 @@
 <script lang="ts">
 	import { Play } from "lucide-svelte";
 	import type { Task } from "src/TaskTracking/Types/Task";
-	import { State, type TaskTrackingEvent } from "src/TaskTracking/UI/TaskTrackingEvent";
+	import {
+		State,
+		type TaskTrackingEvent,
+	} from "src/TaskTracking/UI/TaskTrackingEvent";
 	import { createEventDispatcher } from "svelte";
 	import { renderMarkdown } from "./Markdown";
 	import { obsidianView } from "./ObsidianStore";
@@ -15,10 +18,10 @@
 	}>();
 
 	function start() {
-		// dispatch("startStop", {
-		// 	task: task.text,
-		// 	currentState: State.STOPPED,
-		// });
+		dispatch("startStop", {
+			task: task,
+			currentState: State.STOPPED,
+		});
 	}
 </script>
 

@@ -1,4 +1,4 @@
-import type { Task } from "../Types/Task";
+import type { TaskListEntry } from "../Types/TaskListEntry";
 
 export enum State {
     STOPPED = 0,
@@ -6,7 +6,7 @@ export enum State {
 }
 
 export interface TaskTrackingEvent<T = unknown> {
-    task: Task;
+    task: TaskListEntry;
     currentState: State;
     payload?: T
 }

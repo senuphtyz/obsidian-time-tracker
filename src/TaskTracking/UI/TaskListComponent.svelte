@@ -5,9 +5,10 @@
 	import TaskComponent from "./TaskComponent.svelte";
 	import ActiveTaskComponent from "./ActiveTaskComponent.svelte";
 	import type { TaskListEntry } from "../Types/TaskListEntry";
+	import type { Writable } from "svelte/store";
 
 	export let tasks: TaskListEntry[];
-	export let currentTask: TaskListEntry | undefined;
+	export let currentTask: Writable<TaskListEntry | undefined>;
 
 	const dispatch = createEventDispatcher<{
 		startStop: TaskTrackingEvent;
@@ -24,11 +25,11 @@
 </script>
 
 <div class="task-component-list">
-	{#if currentTask}
-		<ActiveTaskComponent task={currentTask} on:startStop={startStop} />
+	{#if $currentTask}
+		<ActiveTaskComponent task={$currentTask} on:startStop={startStop} />
 	{/if}
 
-	{#each tasks as t, idx (t)}
+	{#each tasks as t}
 		<TaskComponent task={t} on:startStop={startStop} />
 	{/each}
 </div>
