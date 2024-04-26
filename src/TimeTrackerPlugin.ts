@@ -1,17 +1,25 @@
-import { Plugin, WorkspaceLeaf } from 'obsidian';
+import { App, Plugin, WorkspaceLeaf, type PluginManifest } from 'obsidian';
 import TimeTrackerSettingTab from "./TimeTrackerSettingTab";
 import { DEFAULT_SETTINGS, type TimeTrackerSettings } from './Types/TimeTrackerSettings';
 import StatusBarTime from './StatusBarTime';
 import CommandHandler from './CommandHandler';
-import { TaskTrackingView, VIEW_TYPE } from './TaskTrackingView';
+import { TaskTrackingView, VIEW_TYPE } from './TaskTracking/TaskTrackingView';
+import { TaskTrackingService } from './TaskTracking/TaskTrackingService';
 
 /**
  * Main entry point for obsidian.
  */
 export default class TimeTrackerPlugin extends Plugin {
 	public settings: TimeTrackerSettings = DEFAULT_SETTINGS;
+	public readonly taskTrackingService: TaskTrackingService;
 	private statusBar: StatusBarTime | undefined;
 	private commandHandler: CommandHandler | undefined;
+
+	constructor(app: App, manifest: PluginManifest) {
+		super(app, manifest);
+
+		this.taskTrackingService = new TaskTrackingService(this);
+	}
 
 	/**
 	 * Update all view members after changes.

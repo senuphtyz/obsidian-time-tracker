@@ -33,6 +33,7 @@
 		"typescript": "^5.4.5"
 	},
 	"dependencies": {
+		"fastest-levenshtein": "^1.0.16",
 		"lucide-svelte": "^0.372.0",
 		"obsidian": "latest",
 		"obsidian-dataview": "^0.5.66"

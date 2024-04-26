@@ -1,3 +1,5 @@
+import type { TaskTrackingEntry } from "./TaskTrackingEntry";
+
 /**
  * Task definition.
  */
@@ -15,6 +17,7 @@ export interface Task {
     children: [];
     task: boolean;
     annotated: boolean;
+    tracking: TaskTrackingEntry[];
     position: {
         start: FilePosition;
         end: FilePosition;

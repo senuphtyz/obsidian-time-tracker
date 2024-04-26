@@ -1,6 +1,7 @@
-import { App, type FrontMatterCache, TFile } from "obsidian";
+import { App, type FrontMatterCache, TFile, TAbstractFile } from "obsidian";
 import type DailyNoteSettings from "../Types/DailyNoteSettings";
 import moment from "moment";
+import path from "path";
 
 /**
  * Get settings of daily note plugin.
@@ -25,11 +26,18 @@ export function getDailyNoteSettings(app: App): DailyNoteSettings {
  * @param file Note to check.
  * @returns True if name matches format configuration of daily note plugin.
  */
-export function isDailyNote(app: App, file: TFile): boolean {
+export function isDailyNote(app: App, file: TFile | TAbstractFile): boolean {
     const settings = getDailyNoteSettings(app);
-    const dt = moment(file.basename.replace(file.extension, ''), settings.format);
 
-    return dt.format(settings.format) == file.basename;
+    if (file instanceof TFile) {
+        const dt = moment(file.basename.replace(file.extension, ''), settings.format);
+        return dt.format(settings.format) == file.basename;
+    }
+
+    const parts = file.path.split(path.sep);
+    const filename = parts[parts.length - 1].replace('.md', '');
+    const dt = moment(filename, settings.format);
+    return dt.format(settings.format) == filename;
 }
 
 /**

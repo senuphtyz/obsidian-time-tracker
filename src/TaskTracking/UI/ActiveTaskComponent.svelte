@@ -1,24 +1,18 @@
 <script lang="ts">
 	import moment, { type Moment } from "moment";
 	import { Timer, Play, Pause, CalendarClock } from "lucide-svelte";
-	import type { Task } from "src/Types/Task";
-	import { State, type TaskTrackingEvent } from "src/Types/TaskTrackingEvent";
+	import type { Task } from "src/TaskTracking/Types/Task";
+	import { State, type TaskTrackingEvent } from "src/TaskTracking/UI/TaskTrackingEvent";
 	import { createEventDispatcher } from "svelte";
 	import { renderMarkdown } from "./Markdown";
 	import { obsidianView, obsidianSettings } from "./ObsidianStore";
+	import type { TaskListEntry } from "../Types/TaskListEntry";
 
-	export let task: Task;
-	export let running: boolean = true;
+	export let task: TaskListEntry;
 	export let disabled: boolean = false;
-	export let start: string = "2024-04-22 08:00";
-	export let lastStart: string | undefined;
-	export let lastStop: string | undefined;
 
 	let timer: string = "";
 	let clear: string | number | NodeJS.Timeout | undefined;
-
-	$: lStart = lastStart ? moment(lastStart, "YYYY-MM-DD HH:mm"): null;
-	$: lStop = lastStop ? moment(lastStop, "YYYY-MM-DD HH:mm"): null;
 
 	$: {
 		clearInterval(clear);
@@ -30,22 +24,17 @@
 	}>();
 
 	function startStop() {
-		running = !running;
 		tick();
 
-		dispatch("startStop", {
-			task: task,
-			currentState: running ? State.TRACKING : State.STOPPED,
-		});
+		// dispatch("startStop", {
+		// 	task: task,
+		// 	currentState: running ? State.TRACKING : State.STOPPED,
+		// });
 	}
 
 	function tick() {
-		if (!running) {
-			timer = "";
-			return;
-		}
 		const c = moment();
-		const s = moment(start, "YYYY-MM-DD HH:mm");
+		const s = task.start;
 		const d = c.diff(s);
 		const ms = d / 1000;
 
@@ -74,14 +63,14 @@
 			}}
 		></div>
 		<div class="tags">
-			{#each task.tags as name}
+			<!-- {#each task.tags as name}
 				<span class="tag">{name}</span>
-			{/each}
+			{/each} -->
 		</div>
 	</div>
 	<div class="footer">
 		<div class="last-tracked">
-			{#if lStart && lStop}
+			<!-- {#if lStart && lStop}
 			<CalendarClock
 				size="18"
 				style="margin-bottom: -2px"
@@ -98,7 +87,7 @@
 						: $obsidianSettings.datetime_format,
 				)}</span
 			>
-			{/if}
+			{/if} -->
 		</div>
 		<div class="timer">
 			{#if timer != ""}
@@ -113,19 +102,11 @@
 		</div>
 		<div class="action">
 			<button on:click={startStop} {disabled}>
-				{#if running}
-					<Pause
-						size="18"
-						color="var(--color-red)"
-						style="margin-bottom: -1px"
-					/>
-				{:else}
-					<Play
-						size="18"
-						color="var(--color-green)"
-						style="margin-bottom: -1px"
-					/>
-				{/if}
+				<Pause
+					size="18"
+					color="var(--color-red)"
+					style="margin-bottom: -1px"
+				/>
 			</button>
 		</div>
 	</div>
