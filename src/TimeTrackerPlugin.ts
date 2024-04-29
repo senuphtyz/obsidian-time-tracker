@@ -5,6 +5,8 @@ import StatusBarTime from './StatusBarTime';
 import CommandHandler from './CommandHandler';
 import { TaskTrackingView, VIEW_TYPE } from './TaskTracking/TaskTrackingView';
 import { TaskTrackingService } from './TaskTracking/TaskTrackingService';
+import { TaskTrackingCache } from './TaskTracking/Cache/TaskTrackingCache';
+import { getAPI } from 'obsidian-dataview';
 
 /**
  * Main entry point for obsidian.
@@ -18,7 +20,7 @@ export default class TimeTrackerPlugin extends Plugin {
 	constructor(app: App, manifest: PluginManifest) {
 		super(app, manifest);
 
-		this.taskTrackingService = new TaskTrackingService(this);
+		this.taskTrackingService = new TaskTrackingService(this, new TaskTrackingCache(), getAPI(app));
 	}
 
 	/**

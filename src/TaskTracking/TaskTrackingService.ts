@@ -3,26 +3,25 @@ import type { TAbstractFile } from "obsidian";
 import type TimeTrackerPlugin from "src/TimeTrackerPlugin";
 import { getDailyNoteSettings, isDailyNote } from "src/Utils/NoteUtils";
 import type { TaskTrackingEntry } from "./Types/TaskTrackingEntry";
-import { getAPI, type DataviewApi } from "obsidian-dataview";
+import { type DataviewApi } from "obsidian-dataview";
 import type { Task } from "./Types/Task";
 import { distance } from "fastest-levenshtein";
-import type { LastTimeTrack, TaskListEntry } from "./Types/TaskListEntry";
-import { BackInTimeIterator, type TaskTrackingCache } from "./Types/TaskTrackingCache";
-import path from "path";
+import type { TaskListEntry } from "./Types/TaskListEntry";
+import type { TaskTrackingCache } from "./Cache/TaskTrackingCache";
 
 
 type LevenshteinMap = { task: Task, distance: number };
 
 export class TaskTrackingService {
     readonly FRONT_MATTER_KEY = "time_tracking";
-    api: DataviewApi;
-    cache: TaskTrackingCache = {};
-    currentActiveTaskTracking: TaskListEntry | undefined;
+    // private currentActiveTaskTracking: TaskListEntry | undefined;
 
 
-    constructor(private plugin: TimeTrackerPlugin) {
-        this.api = getAPI(plugin.app);
-
+    constructor(
+        private plugin: TimeTrackerPlugin,
+        private cache: TaskTrackingCache,
+        private api: DataviewApi
+    ) {
         this.cacheTrackingData();
 
         this.plugin.registerEvent(plugin.app.vault.on('modify', (abstractFile: TAbstractFile) => {
@@ -63,13 +62,6 @@ export class TaskTrackingService {
 
         const dateString = moment(abstractFile.name, dailyNoteSettings.format).format("YYYY-MM-DD");
 
-        if (!(dateString in this.cache)) {
-            this.cache[dateString] = {
-                file: abstractFile.path,
-                entries: [],
-            }
-        }
-
         for (const t of (fm[this.FRONT_MATTER_KEY] as TaskTrackingEntry[])) {
             const taskList = this.api.pages().file.tasks.filter((task: Task) => task.text == t.task);
             let referencedTask: Task | null = null;
@@ -80,65 +72,38 @@ export class TaskTrackingService {
                 referencedTask = this.findReferencedTask(t);
             }
 
-            this.cache[dateString].entries.push({
+            this.cache.addEntry({
+                date: dateString,
                 entry: t,
-                taskReference: referencedTask,
-            });
+                taskReference: referencedTask
+            }, abstractFile.path)
         }
 
         return true;
     }
 
-    findLastTracked(taskText: string): LastTimeTrack | null {
-        const it = new BackInTimeIterator(this.cache);
-
-        let running = true;
-        while (running) {
-            const itm = it.next();
-
-            if (itm.value?.entry.task == taskText && itm.value?.entry.end != "") {
-                return {
-                    start: moment(`${itm.value.date} ${itm.value.entry.start}`, 'YYYY-MM-DD HH:mm'),
-                    end: moment(`${itm.value.date} ${itm.value.entry.end}`, 'YYYY-MM-DD HH:mm'),
-                }
-            }
-
-            running = !itm.done
-        }
-
-        return null;
-    }
-
-
+    /**
+     * Returns the current running task
+     */
     get runningTaskEntry(): TaskListEntry | undefined {
-        if (this.currentActiveTaskTracking) {
-            return this.currentActiveTaskTracking;
+        const runningTask = this.cache.runningTaskEntry;
+
+        if (runningTask) {
+            const last = this.cache.getLastTrack(runningTask.entry.task);
+            const today = moment().format("YYYY-MM-DD");
+
+            return {
+                path: runningTask.taskReference?.path ? runningTask.taskReference.path : "",
+                text: runningTask.entry.task,
+                start: moment(`${today} ${runningTask.entry.start}`, "YYYY-MM-DD HH:mm"),
+                last: last ? {
+                    start: moment(`${last.date} ${last.entry.start}`, 'YYYY-MM-DD HH:mm'),
+                    end: moment(`${last.date} ${last.entry.end}`, 'YYYY-MM-DD HH:mm'),
+                } : null
+            }
         }
 
-        const today = moment().format("YYYY-MM-DD");
-
-        if (!this.cache[today]) {
-            return;
-        }
-
-        const ret = this.cache[today].entries
-            .filter(e => e.entry.start != "" && e.entry.end == "")
-            .map(e => {
-                return {
-                    text: e.entry.task,
-                    path: this.cache[today].file,
-                    start: moment(`${today} ${e.entry.start}`, "YYYY-MM-DD HH:mm"),
-                    last: null
-                }
-            }).first();
-
-        if (ret) {
-            // @ts-ignore
-            ret.last = this.findLastTracked(ret.text);
-        }
-
-        this.currentActiveTaskTracking = ret;
-        return ret;
+        return undefined;
     }
 
     /**
@@ -177,7 +142,7 @@ export class TaskTrackingService {
             const key = start.format("YYYY-MM-DD");
 
             if (key in this.cache) {
-                for (const itm of this.cache[key].entries) {
+                for (const itm of this.cache) {
                     if (!itm.taskReference || itm.taskReference.completed) {
                         continue
                     }
@@ -223,13 +188,14 @@ export class TaskTrackingService {
     }
 
     stopRunningTracking() {
-        if (!this.runningTaskEntry) {
+        const runningTaskEntry = this.cache.runningTaskEntry;
+        if (!runningTaskEntry) {
             return;
         }
 
         const dailyNoteSettings = getDailyNoteSettings(this.plugin.app);
 
-        const file = this.plugin.app.vault.getFileByPath(`${dailyNoteSettings.folder}/${moment().format(dailyNoteSettings.format)}.md`);
+        const file = this.plugin.app.vault.getFileByPath(`${dailyNoteSettings.folder}/${moment(runningTaskEntry.date, 'YYYY-MM-DD').format(dailyNoteSettings.format)}.md`);
         if (!file) {
             return;
         }
@@ -245,7 +211,7 @@ export class TaskTrackingService {
                         fm[this.FRONT_MATTER_KEY].splice(fm[this.FRONT_MATTER_KEY].indexOf(itm), 1);
                     }
 
-                    this.currentActiveTaskTracking = undefined;
+                    this.cache.clearRunningTaskEntry();
                     return;
                 }
             }
@@ -253,10 +219,7 @@ export class TaskTrackingService {
     }
 
     startTracking(taskText: string, filePath: string) {
-
-        if (this.currentActiveTaskTracking) {
-            this.stopRunningTracking();
-        }
+        this.stopRunningTracking();
 
         const dailyNoteSettings = getDailyNoteSettings(this.plugin.app);
 
@@ -266,6 +229,7 @@ export class TaskTrackingService {
         }
 
         this.plugin.app.fileManager.processFrontMatter(file, (fm) => {
+            console.info("PROCESS");
             if (!(this.FRONT_MATTER_KEY in fm)) {
                 fm[this.FRONT_MATTER_KEY] = [];
             }
@@ -280,12 +244,11 @@ export class TaskTrackingService {
 
 
             fm[this.FRONT_MATTER_KEY].push(entry);
-            this.currentActiveTaskTracking = {
-                text: taskText,
-                start: now,
-                path: filePath,
-                last: this.findLastTracked(taskText),
-            };
+            this.cache.addEntry({
+                date: moment().format("YYYY-MM-DD"),
+                entry: entry,
+                taskReference: this.findReferencedTask(entry)
+            }, file.path)
         });
     }
 }
