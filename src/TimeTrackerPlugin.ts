@@ -7,6 +7,7 @@ import { TaskTrackingView, VIEW_TYPE } from './TaskTracking/TaskTrackingView';
 import { TaskTrackingService } from './TaskTracking/TaskTrackingService';
 import { TaskTrackingCache } from './TaskTracking/Cache/TaskTrackingCache';
 import { getAPI } from 'obsidian-dataview';
+import { NoteService } from './NoteService';
 
 /**
  * Main entry point for obsidian.
@@ -14,13 +15,17 @@ import { getAPI } from 'obsidian-dataview';
 export default class TimeTrackerPlugin extends Plugin {
 	public settings: TimeTrackerSettings = DEFAULT_SETTINGS;
 	public readonly taskTrackingService: TaskTrackingService;
+	public readonly noteService: NoteService;
 	private statusBar: StatusBarTime | undefined;
 	private commandHandler: CommandHandler | undefined;
 
 	constructor(app: App, manifest: PluginManifest) {
 		super(app, manifest);
 
-		this.taskTrackingService = new TaskTrackingService(this, new TaskTrackingCache(), getAPI(app));
+		this.noteService = new NoteService(this);
+		this.taskTrackingService = new TaskTrackingService(this, new TaskTrackingCache(), getAPI(app), this.noteService);
+
+		this.taskTrackingService.cacheTrackingData();
 	}
 
 	/**

@@ -1,29 +1,28 @@
 import moment from "moment";
-import type { TAbstractFile } from "obsidian";
-import type TimeTrackerPlugin from "src/TimeTrackerPlugin";
-import { getDailyNoteSettings, isDailyNote } from "src/Utils/NoteUtils";
+import type { FrontMatterCache, TAbstractFile, TFile } from "obsidian";
+import type TimeTrackerPlugin from "../TimeTrackerPlugin";
+import { getDailyNoteSettings, isDailyNote } from "../Utils/NoteUtils";
 import type { TaskTrackingEntry } from "./Types/TaskTrackingEntry";
 import { type DataviewApi } from "obsidian-dataview";
 import type { Task } from "./Types/Task";
 import { distance } from "fastest-levenshtein";
 import type { TaskListEntry } from "./Types/TaskListEntry";
 import type { TaskTrackingCache } from "./Cache/TaskTrackingCache";
+import type { NoteService } from "../NoteService";
 
 
 type LevenshteinMap = { task: Task, distance: number };
 
 export class TaskTrackingService {
     readonly FRONT_MATTER_KEY = "time_tracking";
-    // private currentActiveTaskTracking: TaskListEntry | undefined;
 
 
     constructor(
         private plugin: TimeTrackerPlugin,
         private cache: TaskTrackingCache,
-        private api: DataviewApi
+        private api: DataviewApi,
+        private noteService: NoteService
     ) {
-        this.cacheTrackingData();
-
         this.plugin.registerEvent(plugin.app.vault.on('modify', (abstractFile: TAbstractFile) => {
             if (isDailyNote(plugin.app, abstractFile)) {
                 this.updateCacheForFile(abstractFile);
@@ -32,7 +31,7 @@ export class TaskTrackingService {
     }
 
     private findReferencedTask(taskTrackingEntry: TaskTrackingEntry) {
-        // If a direct matcht could not be found pick the task with the smallest distance between
+        // If a direct match could not be found pick the task with the smallest distance between
         // task and tracking entry.
         // This part of the code might be a performance issue in the future
         // idea might be to prefilter based on length of both strings
@@ -135,33 +134,25 @@ export class TaskTrackingService {
     getListOfPreselectedTasks(amount: number = 10): TaskListEntry[] {
         const ret: TaskListEntry[] = [];
         const tmpSet: Set<Task> = new Set();
-        let start = moment();
 
-        //
-        out: for (let i = 0; i < amount; i++) {
-            const key = start.format("YYYY-MM-DD");
 
-            if (key in this.cache) {
-                for (const itm of this.cache) {
-                    if (!itm.taskReference || itm.taskReference.completed) {
-                        continue
-                    }
-
-                    tmpSet.add(itm.taskReference);
-                    ret.push({
-                        text: itm.entry.task,
-                        path: itm.taskReference.path,
-                        start: undefined,
-                        last: null
-                    })
-
-                    if (ret.length == amount) {
-                        break out;
-                    }
-                }
+        for (const itm of this.cache.lastTrackings) {
+            console.info(itm.taskReference);
+            if (!itm.taskReference) {
+                continue;
             }
 
-            start = start.subtract(1, 'day');
+            tmpSet.add(itm.taskReference);
+            ret.push({
+                text: itm.entry.task,
+                path: itm.taskReference.path,
+                start: undefined,
+                last: null
+            })
+
+            if (ret.length == amount) {
+                return ret;
+            }
         }
 
         if (ret.length < amount) {
@@ -172,13 +163,16 @@ export class TaskTrackingService {
 
             let i = 0;
 
-            while (ret.length < amount) {
-                ret.push({
-                    text: tasks[i].text,
-                    path: tasks[i].path,
-                    start: undefined,
-                    last: null,
-                })
+            while (ret.length < amount && tasks.length > i) {
+                if (!tmpSet.has(tasks[i].text)) {
+                    ret.push({
+                        text: tasks[i].text,
+                        path: tasks[i].path,
+                        start: undefined,
+                        last: null,
+                    });
+                    tmpSet.add(tasks[i].text);
+                }
 
                 i++;
             }
@@ -187,20 +181,16 @@ export class TaskTrackingService {
         return ret;
     }
 
+    /**
+     * Stops tracking of the current active task.
+     */
     stopRunningTracking() {
         const runningTaskEntry = this.cache.runningTaskEntry;
         if (!runningTaskEntry) {
             return;
         }
 
-        const dailyNoteSettings = getDailyNoteSettings(this.plugin.app);
-
-        const file = this.plugin.app.vault.getFileByPath(`${dailyNoteSettings.folder}/${moment(runningTaskEntry.date, 'YYYY-MM-DD').format(dailyNoteSettings.format)}.md`);
-        if (!file) {
-            return;
-        }
-
-        this.plugin.app.fileManager.processFrontMatter(file, (fm) => {
+        this.noteService.processFrontMatter(runningTaskEntry.date, (fm: FrontMatterCache) => {
             for (const i of fm[this.FRONT_MATTER_KEY]) {
                 const itm = (i as TaskTrackingEntry);
 
@@ -218,30 +208,25 @@ export class TaskTrackingService {
         });
     }
 
-    startTracking(taskText: string, filePath: string) {
+    /**
+     * Starts tracking a task.
+     * 
+     * @param taskText Text of the task to start.
+     */
+    startTracking(taskText: string) {
         this.stopRunningTracking();
 
-        const dailyNoteSettings = getDailyNoteSettings(this.plugin.app);
-
-        const file = this.plugin.app.vault.getFileByPath(`${dailyNoteSettings.folder}/${moment().format(dailyNoteSettings.format)}.md`);
-        if (!file) {
-            return;
-        }
-
-        this.plugin.app.fileManager.processFrontMatter(file, (fm) => {
-            console.info("PROCESS");
+        this.noteService.processFrontMatter(undefined, (fm: FrontMatterCache, file: TFile) => {
             if (!(this.FRONT_MATTER_KEY in fm)) {
                 fm[this.FRONT_MATTER_KEY] = [];
             }
 
-            const now = moment();
             const entry: TaskTrackingEntry = {
                 task: taskText,
-                start: now.format("HH:mm"),
+                start: moment().format("HH:mm"),
                 end: "",
                 payload: {},
             };
-
 
             fm[this.FRONT_MATTER_KEY].push(entry);
             this.cache.addEntry({

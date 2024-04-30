@@ -38,6 +38,21 @@ export class TaskTrackingCache implements Iterable<ReferencedTrackingEntry> {
     }
 
     /**
+     * List of last trackings sorted by datetime desc.
+     */
+    get lastTrackings(): ReferencedTrackingEntry[] {
+        return Array
+            .from(this._lastTrackingEntry.values())
+            .map(v => { return { "dd": moment(`${v.date} ${v.entry.start}`, 'YYYY-MM-DD HH:mm'), "v": v } })
+            .sort((a, b) => {
+                return a.dd.isBefore(b.dd) ? -1 : 1;
+            })
+            .map(v => v.v)
+            .reverse()
+        ;
+    }
+
+    /**
      * Adds an entry to the cache.
      * 
      * @param value Tracking entry to add
