@@ -133,19 +133,14 @@ export class TaskTrackingService {
      */
     getListOfPreselectedTasks(amount: number = 10): TaskListEntry[] {
         const ret: TaskListEntry[] = [];
-        const tmpSet: Set<Task> = new Set();
+        const tmpSet: Set<string> = new Set();
 
 
         for (const itm of this.cache.lastTrackings) {
-            console.info(itm.taskReference);
-            if (!itm.taskReference) {
-                continue;
-            }
-
-            tmpSet.add(itm.taskReference);
+            tmpSet.add(itm.taskReference ? itm.taskReference.text : itm.entry.task);
             ret.push({
                 text: itm.entry.task,
-                path: itm.taskReference.path,
+                path: itm.taskReference ? itm.taskReference.path : "",
                 start: undefined,
                 last: null
             })
@@ -158,7 +153,7 @@ export class TaskTrackingService {
         if (ret.length < amount) {
             // there are not enough tracked entries in last times so add some new tasks
             const tasks = this.api.pages().file.tasks
-                .filter((t: Task) => !tmpSet.has(t))
+                .filter((t: Task) => !tmpSet.has(t.text))
                 .filter((t: Task) => !t.completed);
 
             let i = 0;
