@@ -1,4 +1,4 @@
-import type { FrontMatterCache, TFile } from "obsidian";
+import type { FrontMatterCache, TAbstractFile, TFile } from "obsidian";
 import type TimeTrackerPlugin from "./TimeTrackerPlugin";
 import type { Moment } from "moment";
 import moment from "moment";
@@ -13,10 +13,7 @@ export interface DailyNoteSettings {
 }
 
 export class NoteService {
-    private _dailyNoteSettings: DailyNoteSettings | undefined;
-
     constructor(private plugin: TimeTrackerPlugin) {
-        this._dailyNoteSettings = undefined;
     }
 
     private getFileForDate(date: string | Moment | undefined): TFile | null {
@@ -31,22 +28,48 @@ export class NoteService {
         )
     }
 
+    /**
+     * Returns the daily note plugin settings.
+     */
     get dailyNoteSettings(): DailyNoteSettings {
-        if (!this._dailyNoteSettings) {
-            // @ts-ignore
-            const internalPlugins = this.plugin.app["internalPlugins"];
+        // @ts-ignore
+        const internalPlugins = this.plugin.app["internalPlugins"];
 
-            const { folder, format, template } =
-                internalPlugins.getPluginById("daily-notes")?.instance?.options || {};
+        const { folder, format, template } =
+            internalPlugins.getPluginById("daily-notes")?.instance?.options || {};
 
-            this._dailyNoteSettings = {
-                format: format || "YYYY-MM-DD",
-                folder: folder?.trim() || "",
-                template: template?.trim() || "",
-            };
+        return {
+            format: format || "YYYY-MM-DD",
+            folder: folder?.trim() || "",
+            template: template?.trim() || "",
+        };
+    }
+
+    /**
+     * Find a daily note by its date.
+     * 
+     * @param date 
+     * @returns 
+     */
+    findFileByDate(date: string | Moment): TFile | null {
+        const s = this.dailyNoteSettings;
+
+        if (typeof (date) != "string") {
+            date = date.format(s.format);
         }
 
-        return this._dailyNoteSettings;
+        return this.plugin.app.vault.getFileByPath(`${s.folder}/${date}.md`);
+    }
+
+    /**
+     * Returns date of the given daily note file.
+     * 
+     * @param file 
+     * @returns 
+     */
+    getDateOfFilePath(file: TAbstractFile): string {
+        const s = this.dailyNoteSettings;
+        return moment(file.name, s.format).format("YYYY-MM-DD");
     }
 
     /**

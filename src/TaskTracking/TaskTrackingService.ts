@@ -30,7 +30,13 @@ export class TaskTrackingService {
         }));
     }
 
-    private findReferencedTask(taskTrackingEntry: TaskTrackingEntry) {
+    private findReferencedTask(taskTrackingEntry: TaskTrackingEntry): Task | null {
+        const taskList = this.api.pages().file.tasks.filter((task: Task) => task.text == taskTrackingEntry.task);
+
+        if (taskList.length == 1) {
+            return taskList[0];
+        }
+
         // If a direct match could not be found pick the task with the smallest distance between
         // task and tracking entry.
         // This part of the code might be a performance issue in the future
@@ -44,37 +50,29 @@ export class TaskTrackingService {
                 return i.distance / taskTrackingEntry.task.length <= 0.25;
             })
             .sort((i: LevenshteinMap) => i.distance)
-            .map((i: LevenshteinMap) => i.task)
-            .first();
+            .map((i: LevenshteinMap) => i.task);
 
-        return referencedTask;
+        if (referencedTask.length > 0) {
+            return referencedTask[0];
+        }
+
+        return null;
     }
-
 
     private updateCacheForFile(abstractFile: TAbstractFile): boolean {
         const fm = this.plugin.app.metadataCache.getCache(abstractFile.path)?.frontmatter;
-        const dailyNoteSettings = getDailyNoteSettings(this.plugin.app);
 
         if (!fm || !(this.FRONT_MATTER_KEY in fm)) {
             return false;
         }
 
-        const dateString = moment(abstractFile.name, dailyNoteSettings.format).format("YYYY-MM-DD");
+        const dateString = this.noteService.getDateOfFilePath(abstractFile);
 
         for (const t of (fm[this.FRONT_MATTER_KEY] as TaskTrackingEntry[])) {
-            const taskList = this.api.pages().file.tasks.filter((task: Task) => task.text == t.task);
-            let referencedTask: Task | null = null;
-
-            if (taskList.length == 1) {
-                referencedTask = taskList[0];
-            } else if (taskList.length == 0) {
-                referencedTask = this.findReferencedTask(t);
-            }
-
             this.cache.addEntry({
                 date: dateString,
                 entry: t,
-                taskReference: referencedTask
+                taskReference: this.findReferencedTask(t)
             }, abstractFile.path)
         }
 
@@ -112,11 +110,9 @@ export class TaskTrackingService {
      * @returns
      */
     cacheTrackingData(days: number = 90) {
-        const dailyNoteSettings = getDailyNoteSettings(this.plugin.app);
-
         let start = moment();
         for (let i = 1; i < days; i++) {
-            const file = this.plugin.app.vault.getFileByPath(`${dailyNoteSettings.folder}/${start.format(dailyNoteSettings.format)}.md`);
+            const file = this.noteService.findFileByDate(start);
             if (!file) {
                 continue;
             }

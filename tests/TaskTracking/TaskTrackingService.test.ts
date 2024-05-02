@@ -1,13 +1,19 @@
 import { TaskTrackingService } from "../../src/TaskTracking/TaskTrackingService";
 import { TaskTrackingCache } from "../../src/TaskTracking/Cache/TaskTrackingCache";
 import { beforeEach, describe, expect, jest, test } from "@jest/globals";
-import type { FrontMatterCache } from "obsidian";
+import type { ReferencedTrackingEntry } from "src/TaskTracking/Types/ReferencedTrackingEntry";
 
 describe('Check if taskTrackingService is properly working', () => {
     let service: TaskTrackingService;
     const noteService = {
         "processFrontMatter": (date: string, fn: any) => {
-            fn({});
+            fn({
+                "time_tracking": [
+                    { start: "01:00", end: "", task: "Running Task" },
+                ]
+            }, {
+                path: "/running-task"
+            });
         }
     };
 
@@ -76,5 +82,71 @@ describe('Check if taskTrackingService is properly working', () => {
         service.stopRunningTracking()
 
         expect(service.runningTaskEntry).toBeUndefined();
+    });
+
+    test('Check if start properly starts a task', () => {
+        expect(service.runningTaskEntry).toBeDefined();
+        expect(service.runningTaskEntry?.text).not.toEqual("Task 1");
+        service.startTracking("Task 1");
+        expect(service.runningTaskEntry).toBeDefined();
+        expect(service.runningTaskEntry?.text).toEqual("Task 1");
+    });
+
+    test('Check if cache is properly updated for a file', () => {
+        const file = {
+            path: "/daily-note",
+        }
+
+        const plugin = {
+            app: {
+                vault: {
+                    on: jest.fn()
+                },
+                metadataCache: {
+                    getCache: jest.fn().mockReturnValueOnce({
+                        frontmatter: {
+                            "time_tracking": [
+                                {
+                                    task: "Give a cow more food",
+                                    start: "04:00",
+                                    end: "06:00"
+                                }
+                            ]
+                        }
+                    })
+                }
+            },
+            registerEvent: jest.fn(),
+        };
+
+        const noteService = {
+            findFileByDate: jest.fn().mockReturnValueOnce(file),
+            getDateOfFilePath: jest.fn().mockReturnValue("2020-01-01"),
+        };
+
+        const api = {
+            pages: jest.fn().mockReturnValue({
+                file: { tasks: [] }
+            })
+        };
+
+        const cache = new TaskTrackingCache();
+
+        expect(cache.length).toBe(0);
+
+        // @ts-ignore
+        service = new TaskTrackingService(plugin, cache, api, noteService);
+        service.cacheTrackingData();
+
+        expect(cache.length).toBe(1);
+        expect(cache.entries[0]).toStrictEqual({
+            date: "2020-01-01",
+            entry: {
+                task: "Give a cow more food",
+                start: "04:00",
+                end: "06:00"
+            },
+            taskReference: null
+        } as ReferencedTrackingEntry)
     });
 });

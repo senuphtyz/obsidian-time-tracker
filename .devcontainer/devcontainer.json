@@ -15,7 +15,8 @@
 			"extensions": [
 				"firsttris.vscode-jest-runner",
 				"GitHub.vscode-github-actions",
-				"svelte.svelte-vscode"
+				"svelte.svelte-vscode",
+				"Orta.vscode-jest"
 			]
 		}
 	}

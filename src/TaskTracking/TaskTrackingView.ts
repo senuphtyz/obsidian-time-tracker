@@ -55,7 +55,7 @@ export class TaskTrackingView extends ItemView {
             this.plugin.taskTrackingService.stopRunningTracking();
             this.currentTaskStore.set(undefined);
         } else if (d.currentState == State.STOPPED) {
-            this.plugin.taskTrackingService.startTracking(d.task.text, d.task.path);
+            this.plugin.taskTrackingService.startTracking(d.task.text);
             this.currentTaskStore.set(d.task);
         }
     }
