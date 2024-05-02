@@ -2,18 +2,20 @@ import { TaskTrackingService } from "../../src/TaskTracking/TaskTrackingService"
 import { TaskTrackingCache } from "../../src/TaskTracking/Cache/TaskTrackingCache";
 import { beforeEach, describe, expect, jest, test } from "@jest/globals";
 import type { ReferencedTrackingEntry } from "src/TaskTracking/Types/ReferencedTrackingEntry";
+import type { FrontMatterCache, TAbstractFile } from "obsidian";
 
 describe('Check if taskTrackingService is properly working', () => {
     let service: TaskTrackingService;
     const noteService = {
-        "processFrontMatter": (date: string, fn: any) => {
+        "processFrontMatter": (date: string, fn: (fm: FrontMatterCache, file: TAbstractFile) => void) => {
             fn({
                 "time_tracking": [
                     { start: "01:00", end: "", task: "Running Task" },
                 ]
-            }, {
-                path: "/running-task"
-            });
+            },
+                // @ts-ignore
+                { path: "/running-task" }
+            );
         }
     };
 

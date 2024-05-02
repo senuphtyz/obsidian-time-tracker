@@ -1,7 +1,7 @@
 import moment from "moment";
 import type { FrontMatterCache, TAbstractFile, TFile } from "obsidian";
 import type TimeTrackerPlugin from "../TimeTrackerPlugin";
-import { getDailyNoteSettings, isDailyNote } from "../Utils/NoteUtils";
+import { isDailyNote } from "../Utils/NoteUtils";
 import type { TaskTrackingEntry } from "./Types/TaskTrackingEntry";
 import { type DataviewApi } from "obsidian-dataview";
 import type { Task } from "./Types/Task";
