@@ -2,4 +2,4 @@
 
 export class TaskTrackingException extends Error { }
 
-export class DailyNotMissingException extends Error {}
+export class DailyNoteMissingException extends Error {}

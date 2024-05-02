@@ -2,7 +2,7 @@ import type { FrontMatterCache, TAbstractFile, TFile } from "obsidian";
 import type TimeTrackerPlugin from "./TimeTrackerPlugin";
 import type { Moment } from "moment";
 import moment from "moment";
-import { DailyNotMissingException } from "./Exception";
+import { DailyNoteMissingException } from "./Exception";
 
 export type ProcessFrontMatterFn = (fm: FrontMatterCache, file: TFile) => void;
 
@@ -14,18 +14,6 @@ export interface DailyNoteSettings {
 
 export class NoteService {
     constructor(private plugin: TimeTrackerPlugin) {
-    }
-
-    private getFileForDate(date: string | Moment | undefined): TFile | null {
-        if (!date) {
-            date = moment();
-        } else if (typeof (date) == 'string') {
-            date = moment(date, 'YYYY-MM-DD');
-        }
-
-        return this.plugin.app.vault.getFileByPath(
-            `${this.dailyNoteSettings.folder}/${date.format(this.dailyNoteSettings.format)}.md`
-        )
     }
 
     /**
@@ -79,9 +67,13 @@ export class NoteService {
      * @param fn Callback function
      */
     processFrontMatter(date: string | Moment | undefined, fn: ProcessFrontMatterFn) {
-        const file = this.getFileForDate(date);
+        if (date == undefined) {
+            date = moment()
+        }
+
+        const file = this.findFileByDate(date);
         if (file === null) {
-            throw new DailyNotMissingException();
+            throw new DailyNoteMissingException();
         }
 
         this.plugin.app.fileManager.processFrontMatter(file, (fm) => { fn(fm, file) });
