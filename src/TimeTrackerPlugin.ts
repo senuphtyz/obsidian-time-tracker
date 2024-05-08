@@ -16,6 +16,7 @@ export default class TimeTrackerPlugin extends Plugin {
 	public settings: TimeTrackerSettings = DEFAULT_SETTINGS;
 	public readonly taskTrackingService: TaskTrackingService;
 	public readonly noteService: NoteService;
+	private cache: TaskTrackingCache;
 	private statusBar: StatusBarTime | undefined;
 	private commandHandler: CommandHandler | undefined;
 
@@ -23,9 +24,11 @@ export default class TimeTrackerPlugin extends Plugin {
 		super(app, manifest);
 
 		this.noteService = new NoteService(this);
-		this.taskTrackingService = new TaskTrackingService(this, new TaskTrackingCache(), getAPI(app), this.noteService);
+		this.cache = new TaskTrackingCache();
+		this.taskTrackingService = new TaskTrackingService(this, this.cache, getAPI(app), this.noteService);
 
-		this.taskTrackingService.cacheTrackingData();
+		this.addChild(this.cache);
+		this.addChild(this.taskTrackingService);
 	}
 
 	/**

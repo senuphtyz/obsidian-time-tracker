@@ -5,19 +5,42 @@ import type TimeTrackerPlugin from "../TimeTrackerPlugin";
 import { State, type TaskTrackingEvent } from "./UI/TaskTrackingEvent";
 import { writable, type Writable } from "svelte/store";
 import type { TaskListEntry } from "./Types/TaskListEntry";
+import { ActiveTaskStartedEvent } from "./Event/ActiveTaskStartedEvent";
+import { ActiveTaskStoppedEvent } from "./Event/AcitveTaskStoppedEvent";
+import { CacheUpdatedEvent } from "./Event/CacheUpdatedEvent";
 
 export const VIEW_TYPE = "time-tracker-task-tracking-view";
 
 export class TaskTrackingView extends ItemView {
     taskListComponent: TaskListComponent | null;
-    currentTask: TaskListEntry | undefined
     currentTaskStore: Writable<TaskListEntry | undefined>;
+    taskListStore: Writable<TaskListEntry[]>;
 
     constructor(leaf: WorkspaceLeaf, private plugin: TimeTrackerPlugin) {
         super(leaf);
 
         this.taskListComponent = null;
-        this.currentTaskStore = writable(this.currentTask);
+        this.currentTaskStore = writable(undefined);
+        this.taskListStore = writable([]);
+
+        this.plugin.taskTrackingService.addEventListener(ActiveTaskStartedEvent.EVENT_NAME, (evt: Event) => {
+            const e: ActiveTaskStartedEvent = (evt as ActiveTaskStartedEvent);
+            this.currentTaskStore.set(e.task);
+        });
+
+        this.plugin.taskTrackingService.addEventListener(ActiveTaskStoppedEvent.EVENT_NAME, (evt: Event) => {
+            this.currentTaskStore.set(undefined);
+        });
+
+        this.plugin.taskTrackingService.addEventListener(CacheUpdatedEvent.EVENT_NAME, (evt: Event) => {
+            this.taskListStore.set(this.plugin.taskTrackingService.getListOfPreselectedTasks());
+            this.currentTaskStore.set(this.plugin.taskTrackingService.runningTaskEntry);
+        });
+
+        // @ts-ignore
+        this.plugin.registerEvent(this.plugin.app.metadataCache.on("dataview:metadata-change", () => {
+            this.taskListStore.set(this.plugin.taskTrackingService.getListOfPreselectedTasks());
+        }));
     }
 
     getViewType(): string {
@@ -32,7 +55,7 @@ export class TaskTrackingView extends ItemView {
         const container = this.containerEl.children[1];
         container.empty();
 
-        const tasks = this.plugin.taskTrackingService.getListOfPreselectedTasks();
+        this.taskListStore.set(this.plugin.taskTrackingService.getListOfPreselectedTasks());
 
         obsidianView.set(this);
         obsidianSettings.set(this.plugin.settings);
@@ -40,7 +63,7 @@ export class TaskTrackingView extends ItemView {
         this.taskListComponent = new TaskListComponent({
             target: this.contentEl,
             props: {
-                tasks: tasks,
+                tasks: this.taskListStore,
                 currentTask: this.currentTaskStore,
             }
         });
@@ -53,13 +76,10 @@ export class TaskTrackingView extends ItemView {
 
         if (d.currentState == State.TRACKING) {
             this.plugin.taskTrackingService.stopRunningTracking();
-            this.currentTaskStore.set(undefined);
         } else if (d.currentState == State.STOPPED) {
             this.plugin.taskTrackingService.startTracking(d.task.text);
-            this.currentTaskStore.set(d.task);
         }
     }
-
 
     async onClose(): Promise<void> {
         this.taskListComponent?.$destroy();

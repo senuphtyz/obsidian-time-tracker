@@ -7,7 +7,7 @@
 	import type { TaskListEntry } from "../Types/TaskListEntry";
 	import type { Writable } from "svelte/store";
 
-	export let tasks: TaskListEntry[];
+	export let tasks: Writable<TaskListEntry[]>;
 	export let currentTask: Writable<TaskListEntry | undefined>;
 
 	const dispatch = createEventDispatcher<{
@@ -29,7 +29,7 @@
 		<ActiveTaskComponent task={$currentTask} on:startStop={startStop} />
 	{/if}
 
-	{#each tasks as t}
+	{#each $tasks as t}
 		<TaskComponent task={t} on:startStop={startStop} />
 	{/each}
 </div>

@@ -2,13 +2,16 @@ import moment from "moment";
 import type { TaskTrackingCacheItem } from "../Types/TaskTrackingCacheItem";
 import type { ReferencedTrackingEntry } from "../Types/ReferencedTrackingEntry";
 import { BackInTimeIterator } from "./BackInTimeIterator";
+import { Component } from "obsidian";
 
-export class TaskTrackingCache implements Iterable<ReferencedTrackingEntry> {
+export class TaskTrackingCache extends Component implements Iterable<ReferencedTrackingEntry> {
     private _data: Map<string, TaskTrackingCacheItem>;
     private _runningTaskEntry: ReferencedTrackingEntry | undefined;
     private _lastTrackingEntry: Map<string, ReferencedTrackingEntry>;
 
     constructor() {
+        super();
+
         this._data = new Map();
         this._runningTaskEntry = undefined;
         this._lastTrackingEntry = new Map();
@@ -49,7 +52,23 @@ export class TaskTrackingCache implements Iterable<ReferencedTrackingEntry> {
             })
             .map(v => v.v)
             .reverse()
-        ;
+            ;
+    }
+
+    /**
+     * List of files that have task entries.
+     */
+    get files(): Set<string> {
+        return new Set(this._data.keys());
+    }
+
+    /**
+     * Remove caching for a given file.
+     *
+     * @param file Filepath of the file to remove from cache.
+     */
+    removeFileFromCache(date: string) {
+        this._data.delete(date);
     }
 
     /**

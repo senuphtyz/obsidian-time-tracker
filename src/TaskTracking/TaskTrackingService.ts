@@ -1,5 +1,5 @@
 import moment from "moment";
-import type { FrontMatterCache, TAbstractFile, TFile } from "obsidian";
+import { Component, type FrontMatterCache, type TAbstractFile, type TFile } from "obsidian";
 import type TimeTrackerPlugin from "../TimeTrackerPlugin";
 import { isDailyNote } from "../Utils/NoteUtils";
 import type { TaskTrackingEntry } from "./Types/TaskTrackingEntry";
@@ -9,13 +9,19 @@ import { distance } from "fastest-levenshtein";
 import type { TaskListEntry } from "./Types/TaskListEntry";
 import type { TaskTrackingCache } from "./Cache/TaskTrackingCache";
 import type { NoteService } from "../NoteService";
+import { ActiveTaskStartedEvent } from "./Event/ActiveTaskStartedEvent";
+import { ActiveTaskStoppedEvent } from "./Event/AcitveTaskStoppedEvent";
+import { CacheUpdatedEvent } from "./Event/CacheUpdatedEvent";
+import type { ReferencedTrackingEntry } from "./Types/ReferencedTrackingEntry";
 
 
 type LevenshteinMap = { task: Task, distance: number };
 
-export class TaskTrackingService {
+export class TaskTrackingService extends Component {
     readonly FRONT_MATTER_KEY = "time_tracking";
-
+    private eventTarget: EventTarget;
+    private indexReady: boolean = false;
+    private taskReferenceQueue: Set<ReferencedTrackingEntry>;
 
     constructor(
         private plugin: TimeTrackerPlugin,
@@ -23,14 +29,56 @@ export class TaskTrackingService {
         private api: DataviewApi,
         private noteService: NoteService
     ) {
-        this.plugin.registerEvent(plugin.app.vault.on('modify', (abstractFile: TAbstractFile) => {
-            if (isDailyNote(plugin.app, abstractFile)) {
+        super();
+        this.eventTarget = new EventTarget();
+        this.taskReferenceQueue = new Set();
+    }
+
+    onload(): void {
+        this.plugin.registerEvent(this.plugin.app.vault.on('modify', (abstractFile: TAbstractFile) => {
+            if (isDailyNote(this.plugin.app, abstractFile)) {
                 this.updateCacheForFile(abstractFile);
             }
         }));
+
+        // @ts-ignore
+        this.plugin.registerEvent(this.plugin.app.metadataCache.on("dataview:index-ready", () => {
+            this.indexReady = true;
+
+            for (const e of this.taskReferenceQueue) {
+                e.taskReference = this.findReferencedTask(e.entry);
+            }
+
+            this.taskReferenceQueue.clear();
+            this.eventTarget.dispatchEvent(new CacheUpdatedEvent());
+        }));
+
+        if (!this.plugin.app.workspace.layoutReady) {
+            this.plugin.app.workspace.onLayoutReady(async () => this.cacheTrackingData());
+        } else {
+            this.cacheTrackingData();
+        }
+    }
+
+    /**
+     * Wrapper for addEventListener.
+     */
+    addEventListener(type: string, callback: EventListenerOrEventListenerObject | null, options?: AddEventListenerOptions | boolean): void {
+        this.eventTarget.addEventListener(type, callback, options);
+    }
+
+    /**
+     * Wrapper for removeEventListener.
+     */
+    removeEventListener(type: string, callback: EventListenerOrEventListenerObject | null, options?: EventListenerOptions | boolean): void {
+        this.eventTarget.removeEventListener(type, callback, options);
     }
 
     private findReferencedTask(taskTrackingEntry: TaskTrackingEntry): Task | null {
+        if (!this.indexReady) {
+            return null;
+        }
+
         const taskList = this.api.pages().file.tasks.filter((task: Task) => task.text == taskTrackingEntry.task);
 
         if (taskList.length == 1) {
@@ -67,13 +115,20 @@ export class TaskTrackingService {
         }
 
         const dateString = this.noteService.getDateOfFilePath(abstractFile);
+        this.cache.removeFileFromCache(dateString);
 
         for (const t of (fm[this.FRONT_MATTER_KEY] as TaskTrackingEntry[])) {
-            this.cache.addEntry({
+            const entry = {
                 date: dateString,
                 entry: t,
                 taskReference: this.findReferencedTask(t)
-            }, abstractFile.path)
+            };
+
+            if (!this.indexReady) {
+                this.taskReferenceQueue.add(entry);
+            }
+
+            this.cache.addEntry(entry, abstractFile.path)
         }
 
         return true;
@@ -113,13 +168,16 @@ export class TaskTrackingService {
         let start = moment();
         for (let i = 1; i < days; i++) {
             const file = this.noteService.findFileByDate(start);
+            start = start.subtract(1, 'day');
+
             if (!file) {
                 continue;
             }
 
             this.updateCacheForFile(file);
-            start = start.subtract(1, 'day');
         }
+
+        this.eventTarget.dispatchEvent(new CacheUpdatedEvent());
     }
 
     /**
@@ -131,8 +189,11 @@ export class TaskTrackingService {
         const ret: TaskListEntry[] = [];
         const tmpSet: Set<string> = new Set();
 
-
         for (const itm of this.cache.lastTrackings) {
+            if (itm.taskReference && itm.taskReference.completed) {
+                continue
+            }
+
             tmpSet.add(itm.taskReference ? itm.taskReference.text : itm.entry.task);
             ret.push({
                 text: itm.entry.task,
@@ -182,6 +243,10 @@ export class TaskTrackingService {
         }
 
         this.noteService.processFrontMatter(runningTaskEntry.date, (fm: FrontMatterCache) => {
+            if (!fm[this.FRONT_MATTER_KEY]) {
+                return;
+            }
+
             for (const i of fm[this.FRONT_MATTER_KEY]) {
                 const itm = (i as TaskTrackingEntry);
 
@@ -193,6 +258,7 @@ export class TaskTrackingService {
                     }
 
                     this.cache.clearRunningTaskEntry();
+                    this.eventTarget.dispatchEvent(new ActiveTaskStoppedEvent());
                     return;
                 }
             }
@@ -201,7 +267,7 @@ export class TaskTrackingService {
 
     /**
      * Starts tracking a task.
-     * 
+     *
      * @param taskText Text of the task to start.
      */
     startTracking(taskText: string) {
@@ -225,6 +291,8 @@ export class TaskTrackingService {
                 entry: entry,
                 taskReference: this.findReferencedTask(entry)
             }, file.path)
+
+            this.eventTarget.dispatchEvent(new ActiveTaskStartedEvent(this.runningTaskEntry));
         });
     }
 }
