@@ -107,7 +107,7 @@ export default class MobaTimeClient {
 
             await this.store_value(cookies, wt.work_start, EntryCode.WORK_START);
 
-            if (!!wt.pause_start && !!wt.pause_end) {
+            if (!!wt.pause_start && wt.pause_start != "" && !!wt.pause_end && wt.pause_end != "") {
                 await this.store_value(cookies, wt.pause_start, EntryCode.PAUSE_START);
                 await this.store_value(cookies, wt.pause_end, EntryCode.PAUSE_END);
             }
