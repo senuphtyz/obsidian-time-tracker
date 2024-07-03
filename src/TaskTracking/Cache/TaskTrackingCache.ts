@@ -64,10 +64,22 @@ export class TaskTrackingCache extends Component implements Iterable<ReferencedT
 
     /**
      * Remove caching for a given file.
-     *
+     * 
      * @param file Filepath of the file to remove from cache.
      */
     removeFileFromCache(date: string) {
+        const rt = this._runningTaskEntry;
+
+        // Check if current running task is part of the changed file
+        if (rt && rt.date == date) {
+            const entries = this._data.get(date)?.entries ?? [];
+            for (const e of entries) {
+                if (e.entry == rt.entry) {
+                    this._runningTaskEntry = undefined;
+                }
+            }
+        }
+
         this._data.delete(date);
     }
 
@@ -100,6 +112,12 @@ export class TaskTrackingCache extends Component implements Iterable<ReferencedT
                 this._lastTrackingEntry.set(value.entry.task, value);
             }
 
+            // Check if current running task has updated and unset if end time has changed
+            if (this._runningTaskEntry && this._runningTaskEntry.entry.task == value.entry.task) {
+                if (value.date == this._runningTaskEntry.date && value.entry.start != "" && value.entry.end != "") {
+                    this._runningTaskEntry = undefined;
+                }
+            }
         }
 
         this._data.get(value.date)?.entries.push(value);

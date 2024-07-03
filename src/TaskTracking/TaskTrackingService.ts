@@ -20,7 +20,6 @@ type LevenshteinMap = { task: Task, distance: number };
 export class TaskTrackingService extends Component {
     readonly FRONT_MATTER_KEY = "time_tracking";
     private eventTarget: EventTarget;
-    private indexReady: boolean = false;
     private taskReferenceQueue: Set<ReferencedTrackingEntry>;
 
     constructor(
@@ -35,16 +34,15 @@ export class TaskTrackingService extends Component {
     }
 
     onload(): void {
-        this.plugin.registerEvent(this.plugin.app.vault.on('modify', (abstractFile: TAbstractFile) => {
+        this.plugin.registerEvent(this.plugin.app.metadataCache.on('changed', (abstractFile: TAbstractFile) => {
             if (isDailyNote(this.plugin.app, abstractFile)) {
                 this.updateCacheForFile(abstractFile);
+                this.eventTarget.dispatchEvent(new CacheUpdatedEvent());
             }
         }));
 
         // @ts-ignore
         this.plugin.registerEvent(this.plugin.app.metadataCache.on("dataview:index-ready", () => {
-            this.indexReady = true;
-
             for (const e of this.taskReferenceQueue) {
                 e.taskReference = this.findReferencedTask(e.entry);
             }
@@ -75,13 +73,15 @@ export class TaskTrackingService extends Component {
     }
 
     private findReferencedTask(taskTrackingEntry: TaskTrackingEntry): Task | null {
-        if (!this.indexReady) {
+        if (!this.api.index.initialized) {
+            console.info("Index not ready skip search");
             return null;
         }
 
         const taskList = this.api.pages().file.tasks.filter((task: Task) => task.text == taskTrackingEntry.task);
 
         if (taskList.length == 1) {
+            console.info("findReferenedTask [FOUND: Direct]", taskTrackingEntry.task);
             return taskList[0];
         }
 
@@ -101,6 +101,7 @@ export class TaskTrackingService extends Component {
             .map((i: LevenshteinMap) => i.task);
 
         if (referencedTask.length > 0) {
+            console.info("findReferenedTask [FOUND: Levensthein]", taskTrackingEntry.task);
             return referencedTask[0];
         }
 
@@ -109,7 +110,7 @@ export class TaskTrackingService extends Component {
 
     private updateCacheForFile(abstractFile: TAbstractFile): boolean {
         const fm = this.plugin.app.metadataCache.getCache(abstractFile.path)?.frontmatter;
-
+        
         if (!fm || !(this.FRONT_MATTER_KEY in fm)) {
             return false;
         }
@@ -124,7 +125,7 @@ export class TaskTrackingService extends Component {
                 taskReference: this.findReferencedTask(t)
             };
 
-            if (!this.indexReady) {
+            if (!this.api.index.initialized) {
                 this.taskReferenceQueue.add(entry);
             }
 
@@ -185,19 +186,23 @@ export class TaskTrackingService extends Component {
      *
      * @param amount
      */
-    getListOfPreselectedTasks(amount: number = 10): TaskListEntry[] {
+    getListOfPreselectedTasks(amount: number = 20): TaskListEntry[] {
         const ret: TaskListEntry[] = [];
         const tmpSet: Set<string> = new Set();
 
         for (const itm of this.cache.lastTrackings) {
-            if (itm.taskReference && itm.taskReference.completed) {
+            if (!itm.taskReference) {
                 continue
             }
 
-            tmpSet.add(itm.taskReference ? itm.taskReference.text : itm.entry.task);
+            if (itm.taskReference.completed || tmpSet.has(itm.taskReference.text)) {
+                continue
+            }
+
+            tmpSet.add( itm.taskReference.text);
             ret.push({
-                text: itm.entry.task,
-                path: itm.taskReference ? itm.taskReference.path : "",
+                text: itm.taskReference.text,
+                path: itm.taskReference.path,
                 start: undefined,
                 last: null
             })
@@ -213,20 +218,18 @@ export class TaskTrackingService extends Component {
                 .filter((t: Task) => !tmpSet.has(t.text))
                 .filter((t: Task) => !t.completed);
 
-            let i = 0;
-
-            while (ret.length < amount && tasks.length > i) {
-                if (!tmpSet.has(tasks[i].text)) {
-                    ret.push({
-                        text: tasks[i].text,
-                        path: tasks[i].path,
-                        start: undefined,
-                        last: null,
-                    });
-                    tmpSet.add(tasks[i].text);
+            for (let i=0; ret.length < amount && tasks.length > i; i++) {
+                if (tmpSet.has(tasks[i].text)) {
+                    continue
                 }
 
-                i++;
+                ret.push({
+                    text: tasks[i].text,
+                    path: tasks[i].path,
+                    start: undefined,
+                    last: null,
+                });
+                tmpSet.add(tasks[i].text);                
             }
         }
 

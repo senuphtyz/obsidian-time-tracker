@@ -45,7 +45,7 @@ export class NoteService {
         if (typeof (date) != "string") {
             date = date.format(s.format);
         }
-
+        
         return this.plugin.app.vault.getFileByPath(`${s.folder}/${date}.md`);
     }
 
