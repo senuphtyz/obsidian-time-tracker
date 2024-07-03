@@ -6,12 +6,15 @@
 	import ActiveTaskComponent from "./ActiveTaskComponent.svelte";
 	import type { TaskListEntry } from "../Types/TaskListEntry";
 	import type { Writable } from "svelte/store";
+	import TextTaskComponent from "./TextTaskComponent.svelte";
+	import type { JumpToFileEvent } from "./JumpToFileEvent";
 
 	export let tasks: Writable<TaskListEntry[]>;
 	export let currentTask: Writable<TaskListEntry | undefined>;
 
 	const dispatch = createEventDispatcher<{
 		startStop: TaskTrackingEvent;
+		jumpToFile: JumpToFileEvent;
 	}>();
 
 	function startStop(e: CustomEvent<TaskTrackingEvent>) {
@@ -29,7 +32,9 @@
 		<ActiveTaskComponent task={$currentTask} on:startStop={startStop} />
 	{/if}
 
+	<TextTaskComponent on:startStop={startStop} />
+
 	{#each $tasks as t}
-		<TaskComponent task={t} on:startStop={startStop} />
+		<TaskComponent task={t} on:startStop={startStop} on:jumpToFile/>
 	{/each}
 </div>

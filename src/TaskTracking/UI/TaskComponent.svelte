@@ -9,12 +9,14 @@
 	import { renderMarkdown } from "./Markdown";
 	import { obsidianView } from "./ObsidianStore";
 	import type { TaskListEntry } from "../Types/TaskListEntry";
+	import type { JumpToFileEvent } from "./JumpToFileEvent";
 
 	export let task: TaskListEntry;
 	export let disabled: boolean = false;
 
 	const dispatch = createEventDispatcher<{
 		startStop: TaskTrackingEvent;
+		jumpToFile: JumpToFileEvent;
 	}>();
 
 	function start() {
@@ -23,9 +25,15 @@
 			currentState: State.STOPPED,
 		});
 	}
+
+	function jumpToFile() {
+		dispatch("jumpToFile", { task: task });
+	}
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="task-component">
+	<!-- svelte-ignore a11y-click-events-have-key-events -->
 	<div
 		class="text"
 		use:renderMarkdown={{
@@ -33,6 +41,7 @@
 			text: task.text,
 			path: task.path,
 		}}
+		on:click={jumpToFile}
 	></div>
 	<button on:click={start} {disabled}>
 		<Play
@@ -62,6 +71,7 @@
 			overflow: hidden;
 			white-space: nowrap; /* Don't forget this one */
 			text-overflow: ellipsis;
+			cursor: pointer;
 		}
 
 		button {

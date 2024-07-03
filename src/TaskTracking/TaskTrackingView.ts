@@ -1,4 +1,4 @@
-import { ItemView, WorkspaceLeaf } from "obsidian";
+import { ItemView, TFile, WorkspaceLeaf } from "obsidian";
 import TaskListComponent from "./UI/TaskListComponent.svelte";
 import { obsidianView, obsidianSettings } from "./UI/ObsidianStore";
 import type TimeTrackerPlugin from "../TimeTrackerPlugin";
@@ -8,6 +8,7 @@ import type { TaskListEntry } from "./Types/TaskListEntry";
 import { ActiveTaskStartedEvent } from "./Event/ActiveTaskStartedEvent";
 import { ActiveTaskStoppedEvent } from "./Event/AcitveTaskStoppedEvent";
 import { CacheUpdatedEvent } from "./Event/CacheUpdatedEvent";
+import type { JumpToFileEvent } from "./UI/JumpToFileEvent";
 
 export const VIEW_TYPE = "time-tracker-task-tracking-view";
 
@@ -68,6 +69,7 @@ export class TaskTrackingView extends ItemView {
             }
         });
         this.taskListComponent.$on("startStop", this.onStartStop.bind(this));
+        this.taskListComponent.$on("jumpToFile", this.onJumpToFile.bind(this));
         this.currentTaskStore.set(this.plugin.taskTrackingService.runningTaskEntry);
     }
 
@@ -78,6 +80,18 @@ export class TaskTrackingView extends ItemView {
             this.plugin.taskTrackingService.stopRunningTracking();
         } else if (d.currentState == State.STOPPED) {
             this.plugin.taskTrackingService.startTracking(d.task.text);
+        }
+    }
+
+    onJumpToFile(evt: CustomEvent<JumpToFileEvent>) {
+        const d = evt.detail;
+        console.info(d);
+
+        const file = this.app.vault.getFileByPath(d.task.path);
+
+        if (file) {
+            const leaf = this.app.workspace.getLeaf(true);
+            leaf.openFile(file);
         }
     }
 
