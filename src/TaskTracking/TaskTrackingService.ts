@@ -111,7 +111,7 @@ export class TaskTrackingService extends Component {
     private updateCacheForFile(abstractFile: TAbstractFile): boolean {
         const fm = this.plugin.app.metadataCache.getCache(abstractFile.path)?.frontmatter;
         
-        if (!fm || !(this.FRONT_MATTER_KEY in fm)) {
+        if (!fm || !(this.FRONT_MATTER_KEY in fm) || !fm[this.FRONT_MATTER_KEY] || !(typeof fm[this.FRONT_MATTER_KEY][Symbol.iterator] === 'function')) {
             return false;
         }
 
