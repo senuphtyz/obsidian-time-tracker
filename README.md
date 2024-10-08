@@ -27,14 +27,3 @@ Overview over your current work.
 
 - Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/time-tracker/`.
 
-## Donations
-
-The plugin is completely free to use, and very willingly developed and supported since April 2024.
-
-If you have particularly been helped by the Time-Tracker plugin and wish to support it, please see the following link.
-
-[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://buymeacoffee.com/senuphtyz){:target="_blank"}
-
-Donations will go towards my costs and licenses for development tools that I use for productivity.
-
-Thank you 🙏.
