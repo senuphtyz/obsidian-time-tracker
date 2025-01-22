@@ -1,0 +1,27 @@
+.task-component {
+  padding: 5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--background-primary);
+  margin: 10px 0;
+
+  &:hover {
+    background-color: var(--interactive-hover);
+  }
+
+  .text>p {
+    flex-grow: 4;
+    padding: 5px 20px 5px 5px;
+    margin: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    /* Don't forget this one */
+    text-overflow: ellipsis;
+    cursor: pointer;
+  }
+
+  button {
+    cursor: pointer;
+  }
+}

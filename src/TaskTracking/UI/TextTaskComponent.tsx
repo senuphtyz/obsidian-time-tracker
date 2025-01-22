@@ -1,4 +1,34 @@
-<script lang="ts">
+import React, { useState } from "react"
+import moment from "moment";
+import "./TextTaskComponent.scss";
+import { Play } from "lucide-react";
+import { TaskListEntry } from "../Types/TaskListEntry";
+
+interface TextTaskComponentProps {
+  onStart: (task: TaskListEntry) => void;
+}
+
+export const TextTaskComponent = (prop: TextTaskComponentProps) => {
+  const [inputText, setInputText] = useState<string>("");
+
+  return (
+    <div className="text-component">
+      <div className="text">
+        <input type="text" onChange={(e) => { setInputText(e.target.value); }} />
+      </div>
+      <button disabled={inputText == ""} onClick={() => { prop.onStart({ last: null, path: "", start: moment(), text: inputText }) }}>
+        <Play
+          size="18"
+          color="var(--color-green)"
+          style={{ marginBottom: "-1px" }}
+        />
+      </button>
+    </div>
+  )
+}
+
+
+{/* <script lang="ts">
 	import { Play } from "lucide-svelte";
 	import moment from "moment";
 	import {
@@ -46,31 +76,4 @@
 		/>
 	</button>
 </div>
-
-<style lang="scss">
-	.text-component {
-		padding: 5px;
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		background-color: var(--background-primary);
-		margin: 10px 0;
-
-		&:hover {
-			background-color: var(--interactive-hover);
-		}
-
-		.text {
-			flex-grow: 4;
-			padding: 5px 20px 5px 5px;
-
-			input {
-				width: 100%;
-			}
-		}
-
-		button {
-			cursor: pointer;
-		}
-	}
-</style>
+ */}

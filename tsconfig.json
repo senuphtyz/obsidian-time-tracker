@@ -1,13 +1,12 @@
 {
-  "extends": "@tsconfig/svelte/tsconfig.json",
   "compilerOptions": {
     "types": [
-      "svelte",
       "node"
     ],
+    "jsx": "react-jsx",
     "baseUrl": ".",
-    "inlineSources": true,
     "module": "ESNext",
+    "allowSyntheticDefaultImports": true,
     "target": "ES6",
     "allowJs": true,
     "noImplicitAny": true,
@@ -23,6 +22,7 @@
     ]
   },
   "include": [
-    "**/*.ts"
+    "**/*.ts",
+    "**/*.tsx"
   ]
-}
+} 

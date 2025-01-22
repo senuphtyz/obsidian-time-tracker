@@ -3,7 +3,9 @@
 {
 	"name": "Node.js & TypeScript",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"image": "mcr.microsoft.com/devcontainers/typescript-node:1-20-bullseye",
+	"build": {
+		"dockerfile": "Dockerfile"
+	},
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
@@ -15,9 +17,27 @@
 			"extensions": [
 				"firsttris.vscode-jest-runner",
 				"GitHub.vscode-github-actions",
-				"svelte.svelte-vscode",
-				"Orta.vscode-jest"
-			]
+				"Orta.vscode-jest",
+				"msjsdiag.vscode-react-native"
+			],
+			"settings": {
+				"deno.enable": true,
+				"editor.rulers": [
+					160
+				],
+				"editor.indentSize": 2,
+				"editor.formatOnSave": true,
+				"editor.detectIndentation": false,
+				"[typescript]": {
+					"editor.insertSpaces": true
+				},
+				"[typescriptreact]": {
+					"editor.insertSpaces": true
+				},
+				"[json]": {
+					"editor.insertSpaces": true
+				}
+			}
 		}
 	}
 	// Configure tool-specific properties.

@@ -1,0 +1,72 @@
+.active-task {
+  display: flex;
+  flex-direction: column;
+  background: var(--background-primary);
+  padding: 5px;
+
+  &:hover {
+    background-color: var(--interactive-hover);
+  }
+
+  .task {
+    font-size: 1em;
+    font-weight: bold;
+    padding: 2px 10px;
+  }
+
+  .attributes {
+    padding: 5px 10px;
+
+    .path {
+      font-size: var(--font-ui-small);
+    }
+
+    .tags > .tag {
+      display: inline-block;
+      font-size: var(--font-ui-small);
+      color: var(--tag-color);
+      background-color: var(--tag-background);
+      font-weight: var(--tag-weight);
+      text-decoration: var(--tag-decoration);
+      border-color: var(--tag-border-color);
+      border-width: var(--tag-border-width);
+      padding: var(--tag-padding-y) var(--tag-padding-x);
+      border-radius: var(--tag-radius);
+
+      &:hover {
+        color: var(--tag-color-hover);
+        background-color: var(--tag-background-hover);
+        text-decoration: var(--tag-decoration-hover);
+        border-color: var(--tag-border-color-hover);
+      }
+    }
+  }
+
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .last-tracked {
+      flex-grow: 4;
+      padding: 2px 10px;
+    }
+
+    .timer {
+      padding: 2px 10px;
+    }
+
+    .action {
+      padding: 2px 0;
+      background-color: var(--button-background);
+
+      button {
+        border-radius: var(--button-radius);
+      }
+    }
+  }
+
+  button {
+    cursor: pointer;
+  }
+}
