@@ -1,13 +1,6 @@
 import { ItemView, WorkspaceLeaf } from "obsidian";
 import { TaskListComponent } from "./UI/TaskListComponent";
-// import { obsidianView, obsidianSettings } from "./UI/ObsidianStore";
 import type TimeTrackerPlugin from "../TimeTrackerPlugin";
-// import { State, type TaskTrackingEvent } from "./UI/TaskTrackingEvent";
-// import { writable, type Writable } from "svelte/store";
-// import { ActiveTaskStartedEvent } from "./Event/ActiveTaskStartedEvent";
-// import { ActiveTaskStoppedEvent } from "./Event/AcitveTaskStoppedEvent";
-// import { CacheUpdatedEvent } from "./Event/CacheUpdatedEvent";
-// import type { JumpToFileEvent } from "./UI/JumpToFileEvent";
 import { StrictMode } from "react";
 import { Root, createRoot } from 'react-dom/client';
 import { CacheUpdatedEvent } from "./Event/CacheUpdatedEvent";
@@ -68,30 +61,12 @@ export class TaskTrackingView extends ItemView {
           <TaskListComponent
             onStart={(t) => this.plugin.taskTrackingService.startTracking(t.text)}
             onStop={(t) => this.plugin.taskTrackingService.stopRunningTracking()}
-            onJumpTo={this.onJumpToFile}
+            onJumpTo={(t) => this.onJumpToFile(t)}
           />
         </AppContext.Provider>
       </StrictMode>
     )
-
-
-    // this.taskListStore.set(this.plugin.taskTrackingService.getListOfPreselectedTasks());
-
-    // obsidianView.set(this);
-    // obsidianSettings.set(this.plugin.settings);
-
-    // this.taskListComponent = new TaskListComponent({
-    //     target: this.contentEl,
-    //     props: {
-    //         tasks: this.taskListStore,
-    //         currentTask: this.currentTaskStore,
-    //     }
-    // });
-    // this.taskListComponent.$on("startStop", this.onStartStop.bind(this));
-    // this.taskListComponent.$on("jumpToFile", this.onJumpToFile.bind(this));
-    // this.currentTaskStore.set(this.plugin.taskTrackingService.runningTaskEntry);
   }
-
 
   onJumpToFile(task: TaskListEntry) {
     const file = this.app.vault.getFileByPath(task.path);
