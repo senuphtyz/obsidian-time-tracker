@@ -33,6 +33,7 @@ jobs:
         id: build
         run: |
           node esbuild.config.mjs production
+          mv main.css styles.css
 
       # Package the required files into a zip
       - name: Package
