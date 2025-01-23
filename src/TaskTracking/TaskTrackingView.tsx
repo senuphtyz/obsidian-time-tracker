@@ -4,7 +4,7 @@ import type TimeTrackerPlugin from "../TimeTrackerPlugin";
 import { StrictMode } from "react";
 import { Root, createRoot } from 'react-dom/client';
 import { CacheUpdatedEvent } from "./Event/CacheUpdatedEvent";
-import { AppContext, AppContextValue } from "./UI/Contexts";
+import { AppContext, AppContextValue } from "../Common/UI/Contexts";
 import { runningTaskStore, taskStore } from "./UI/Stores";
 import { ActiveTaskStartedEvent } from "./Event/ActiveTaskStartedEvent";
 import { ActiveTaskStoppedEvent } from "./Event/AcitveTaskStoppedEvent";

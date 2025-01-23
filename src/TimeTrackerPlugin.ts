@@ -3,7 +3,8 @@ import TimeTrackerSettingTab from "./TimeTrackerSettingTab";
 import { DEFAULT_SETTINGS, type TimeTrackerSettings } from './Types/TimeTrackerSettings';
 import StatusBarTime from './StatusBarTime';
 import CommandHandler from './CommandHandler';
-import { TaskTrackingView, VIEW_TYPE } from './TaskTracking/TaskTrackingView';
+import { TaskTrackingView, VIEW_TYPE as TaskTrackingViewType } from './TaskTracking/TaskTrackingView';
+import { TimeTrackerView, VIEW_TYPE as TimeTrackerViewType } from './TimeTracking/TimeTrackerView';
 import { TaskTrackingService } from './TaskTracking/TaskTrackingService';
 import { TaskTrackingCache } from './TaskTracking/Cache/TaskTrackingCache';
 import { getAPI } from 'obsidian-dataview';
@@ -13,76 +14,81 @@ import { NoteService } from './NoteService';
  * Main entry point for obsidian.
  */
 export default class TimeTrackerPlugin extends Plugin {
-	public settings: TimeTrackerSettings = DEFAULT_SETTINGS;
-	public readonly taskTrackingService: TaskTrackingService;
-	public readonly noteService: NoteService;
-	private cache: TaskTrackingCache;
-	private statusBar: StatusBarTime | undefined;
-	private commandHandler: CommandHandler | undefined;
+  public settings: TimeTrackerSettings = DEFAULT_SETTINGS;
+  public readonly taskTrackingService: TaskTrackingService;
+  public readonly noteService: NoteService;
+  private cache: TaskTrackingCache;
+  private statusBar: StatusBarTime | undefined;
+  private commandHandler: CommandHandler | undefined;
 
-	constructor(app: App, manifest: PluginManifest) {
-		super(app, manifest);
+  constructor(app: App, manifest: PluginManifest) {
+    super(app, manifest);
 
-		this.noteService = new NoteService(this);
-		this.cache = new TaskTrackingCache();
-		this.taskTrackingService = new TaskTrackingService(this, this.cache, getAPI(app), this.noteService);
+    this.noteService = new NoteService(this);
+    this.cache = new TaskTrackingCache();
+    this.taskTrackingService = new TaskTrackingService(this, this.cache, getAPI(app), this.noteService);
 
-		this.addChild(this.cache);
-		this.addChild(this.taskTrackingService);
-	}
+    this.addChild(this.cache);
+    this.addChild(this.taskTrackingService);
+  }
 
-	/**
-	 * Update all view members after changes.
-	 */
-	updateView() {
-		this.statusBar?.update();
-	}
+  /**
+   * Update all view members after changes.
+   */
+  updateView() {
+    this.statusBar?.update();
+  }
 
-	async onload() {
-		await this.loadSettings();
+  async onload() {
+    await this.loadSettings();
 
-		this.registerView(VIEW_TYPE, (leaf) => new TaskTrackingView(leaf, this));
-		this.statusBar = new StatusBarTime(this.app, this);
-		this.commandHandler = new CommandHandler(this.app, this);
-		this.addSettingTab(new TimeTrackerSettingTab(this.app, this));
+    this.registerView(TaskTrackingViewType, (leaf) => new TaskTrackingView(leaf, this));
+    this.registerView(TimeTrackerViewType, (leaf) => new TimeTrackerView(leaf, this));
 
-		this.commandHandler.register();
-		this.addRibbonIcon("dice", "Activate view", () => {
-			this.activateView();
-		});
-	}
+    this.statusBar = new StatusBarTime(this.app, this);
+    this.commandHandler = new CommandHandler(this.app, this);
+    this.addSettingTab(new TimeTrackerSettingTab(this.app, this));
 
-	onunload() {
-	}
+    this.commandHandler.register();
+    this.addRibbonIcon("dice", "Show task tracker view", () => {
+      this.activateView(TaskTrackingViewType);
+    });
 
-	async activateView() {
-		const { workspace } = this.app;
-		const leaves = workspace.getLeavesOfType(VIEW_TYPE);
+    this.addRibbonIcon("clock", "Show time tracker view", () => {
+      this.activateView(TimeTrackerViewType);
+    });
+  }
 
-		let leaf: WorkspaceLeaf | null = null;
+  onunload() {
+  }
 
-		if (leaves.length > 0) {
-			// A leaf with our view already exists, use that
-			leaf = leaves[0];
-		} else {
-			// Our view could not be found in the workspace, create a new leaf
-			// in the right sidebar for it
-			leaf = workspace.getRightLeaf(false);
-			if (!leaf) {
-				return;
-			}
-			await leaf.setViewState({ type: VIEW_TYPE, active: true });
-		}
+  async activateView(type: string) {
+    const { workspace } = this.app;
+    const leaves = workspace.getLeavesOfType(type);
+    let leaf: WorkspaceLeaf | null = null;
 
-		// "Reveal" the leaf in case it is in a collapsed sidebar
-		workspace.revealLeaf(leaf);
-	}
+    if (leaves.length > 0) {
+      // A leaf with our view already exists, use that
+      leaf = leaves[0];
+    } else {
+      // Our view could not be found in the workspace, create a new leaf
+      // in the right sidebar for it
+      leaf = workspace.getRightLeaf(false);
+      if (!leaf) {
+        return;
+      }
+      await leaf.setViewState({ type: type, active: true });
+    }
 
-	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-	}
+    // "Reveal" the leaf in case it is in a collapsed sidebar
+    workspace.revealLeaf(leaf);
+  }
 
-	async saveSettings() {
-		await this.saveData(this.settings);
-	}
+  async loadSettings() {
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+  }
+
+  async saveSettings() {
+    await this.saveData(this.settings);
+  }
 }

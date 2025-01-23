@@ -1,6 +1,6 @@
 import { MarkdownRenderer } from "obsidian";
 import { useCallback, useContext } from 'react';
-import { AppContext, AppContextValue } from "./Contexts";
+import { AppContext, AppContextValue } from "../../Common/UI/Contexts";
 
 export interface RenderOptions {
   text: string;
