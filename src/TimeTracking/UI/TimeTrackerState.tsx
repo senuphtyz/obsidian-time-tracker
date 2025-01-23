@@ -1,5 +1,32 @@
-import { Play } from "lucide-react";
+import { AlarmClockPlus, Pause, Play, Square } from "lucide-react";
 import { useCallback, useState } from "react";
+import { stateStore } from "./Stores";
+import { TrackerState } from "../Types/TrackerState";
+
+
+interface TimeTrackerStateIconProps {
+  size: number
+}
+
+const TimeTrackerStateIcon = (props: TimeTrackerStateIconProps) => {
+  const state = stateStore.syncExternalStore();
+
+  switch (state) {
+    case TrackerState.NOT_RUNNING:
+      return <AlarmClockPlus size={props.size} />
+
+    case TrackerState.STARTED:
+      return <Play size={props.size} />
+
+    case TrackerState.PAUSED:
+      return <Pause size={props.size} />
+
+    case TrackerState.STOPPED:
+      return <Square size={props.size} />
+  }
+
+  return <></>;
+};
 
 export interface TimeTrackerStateProps {
   time: string;
@@ -28,7 +55,7 @@ export const TimeTrackerState = (props: TimeTrackerStateProps) => {
 
   return (
     <div className="state" ref={ref} onClick={props.onClick}>
-      <Play size={fontSize} />
+      <TimeTrackerStateIcon size={fontSize} />
       <span style={{ fontSize: fontSize }} className="time">{props.time}</span>
     </div>
   );

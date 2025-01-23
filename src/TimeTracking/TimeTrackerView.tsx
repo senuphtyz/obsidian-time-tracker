@@ -4,6 +4,7 @@ import { StrictMode } from "react";
 import { Root, createRoot } from 'react-dom/client';
 import { AppContext, AppContextValue } from "src/Common/UI/Contexts";
 import { TimeTracker } from "./UI/TimeTracker";
+import { stateStore } from "./UI/Stores";
 
 export const VIEW_TYPE = "time-tracker-time-tracker-view";
 
@@ -45,10 +46,16 @@ export class TimeTrackerView extends ItemView {
   }
 
   onEvent(): void {
-    console.log("TimeTrackerView event", event);
+    console.info("MUUH", this.plugin.timeTrackingService.getCurrentState());
+    this.plugin.timeTrackingService.storeTime();
+
+    const nextState = this.plugin.timeTrackingService.getCurrentState();
+    stateStore.setValue(nextState);
   }
 
   async onOpen(): Promise<void> {
+    stateStore.setValue(this.plugin.timeTrackingService.getCurrentState());
+
     const appContext: AppContextValue = {
       settings: this.plugin.settings,
       view: this,

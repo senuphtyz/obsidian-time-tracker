@@ -9,6 +9,7 @@ import { TaskTrackingService } from './TaskTracking/TaskTrackingService';
 import { TaskTrackingCache } from './TaskTracking/Cache/TaskTrackingCache';
 import { getAPI } from 'obsidian-dataview';
 import { NoteService } from './NoteService';
+import { TimeTrackerService } from './TimeTracking/TimeTrackerService';
 
 /**
  * Main entry point for obsidian.
@@ -16,6 +17,7 @@ import { NoteService } from './NoteService';
 export default class TimeTrackerPlugin extends Plugin {
   public settings: TimeTrackerSettings = DEFAULT_SETTINGS;
   public readonly taskTrackingService: TaskTrackingService;
+  public readonly timeTrackingService: TimeTrackerService;
   public readonly noteService: NoteService;
   private cache: TaskTrackingCache;
   private statusBar: StatusBarTime | undefined;
@@ -26,7 +28,9 @@ export default class TimeTrackerPlugin extends Plugin {
 
     this.noteService = new NoteService(this);
     this.cache = new TaskTrackingCache();
-    this.taskTrackingService = new TaskTrackingService(this, this.cache, getAPI(app), this.noteService);
+    const dataviewApi = getAPI(app);
+    this.taskTrackingService = new TaskTrackingService(this, this.cache, dataviewApi, this.noteService);
+    this.timeTrackingService = new TimeTrackerService(this, dataviewApi, this.noteService);
 
     this.addChild(this.cache);
     this.addChild(this.taskTrackingService);

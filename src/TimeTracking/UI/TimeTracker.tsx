@@ -8,6 +8,7 @@ export interface TimeTrackerProps {
 }
 
 export const TimeTracker = (props: TimeTrackerProps) => {
+
   return (
     <div className="time-tracker">
       <div className="info-panels">
