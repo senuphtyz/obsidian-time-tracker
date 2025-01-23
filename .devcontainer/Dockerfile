@@ -28,5 +28,6 @@ RUN /nanolayer install gh-release 'junegunn/fzf' 'fzf'
 RUN /nanolayer install gh-release 'ajeetdsouza/zoxide' 'zoxide'
 RUN /nanolayer install gh-release --asset-regex '\.tar\.gz$' 'eza-community/eza' 'eza'
 RUN /nanolayer install gh-release 'astral-sh/uv' 'uv'
+RUN /nanolayer install gh-release 'Wilfred/difftastic' 'difft'
 # RUN /nanolayer install gh-release --asset-regex '^deno\-' 'denoland/deno' 'deno'
 

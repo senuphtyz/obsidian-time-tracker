@@ -154,6 +154,7 @@ DISABLE_UPDATE_PROMPT=true
 # User configuration
 export EDITOR='vim'
 export GIT_EDITOR='vim'
+export GIT_EXTERNAL_DIFF='difft'
 
 alias find="bfs -noerror -x"
 alias ls="eza --smart-group --group-directories-first"
