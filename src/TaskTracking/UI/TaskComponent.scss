@@ -5,20 +5,25 @@
   align-items: center;
   background-color: var(--background-primary);
   margin: 10px 0;
+  max-width: 100%;
 
   &:hover {
     background-color: var(--interactive-hover);
   }
 
-  .text>p {
+  .text {
     flex-grow: 4;
-    padding: 5px 20px 5px 5px;
-    margin: 0;
     overflow: hidden;
     white-space: nowrap;
     /* Don't forget this one */
-    text-overflow: ellipsis;
     cursor: pointer;
+    padding: 5px 20px 5px 5px;
+
+    >p {
+      margin: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
   }
 
   button {

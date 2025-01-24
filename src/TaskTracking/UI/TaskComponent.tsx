@@ -1,8 +1,7 @@
-import React from "react"
 import { Play } from "lucide-react";
-import "./TaskComponent.scss";
 import { TaskListEntry } from "../Types/TaskListEntry";
 import { RenderMarkdown } from "./RenderMarkdown";
+import "./TaskComponent.scss";
 
 
 interface TaskComponentProps {
