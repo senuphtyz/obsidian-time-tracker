@@ -6,7 +6,9 @@ import { AppContext, AppContextValue } from "src/Common/UI/Contexts";
 import { TimeTracker } from "./UI/TimeTracker";
 import { TrackerStateUpdateEvent } from "./Event/TrackerStateUpdateEvent";
 import { TrackerState } from "./Types/TrackerState";
-import { stateStore } from "./UI/Stores";
+import { monthTimeStore, stateStore, timeStore, weekTimeStore } from "./UI/Stores";
+import { TrackerTimeUpdateEvent } from "./Event/TrackerTimeUpdateEvent";
+import moment from "moment";
 
 export const VIEW_TYPE = "time-tracker-time-tracker-view";
 
@@ -16,9 +18,22 @@ export class TimeTrackerView extends ItemView {
   constructor(leaf: WorkspaceLeaf, private plugin: TimeTrackerPlugin) {
     super(leaf);
 
-    this.plugin.timeTrackingService.addEventListener(TrackerStateUpdateEvent.EVENT_NAME, this.updateState);
+    this.plugin.timeTrackingService.addEventListener(TrackerStateUpdateEvent.EVENT_NAME, (e: TrackerStateUpdateEvent) => this.updateState(e));
+    this.plugin.timeTrackingService.addEventListener(TrackerTimeUpdateEvent.EVENT_NAME, (e: TrackerTimeUpdateEvent) => this.updateTime(e));
 
     this.root = createRoot(this.containerEl.children[1]);
+  }
+
+  private updateTime(event: TrackerTimeUpdateEvent): void {
+    timeStore.setValue(event.time);
+
+    this.plugin.timeTrackingService.getDurationBetweenDates(moment().startOf('month'), moment()).then((value) => {
+      monthTimeStore.setValue(value);
+    });
+
+    this.plugin.timeTrackingService.getDurationBetweenDates(moment().startOf('week'), moment()).then((value) => {
+      weekTimeStore.setValue(value);
+    });
   }
 
   private updateState(event: TrackerStateUpdateEvent): void {

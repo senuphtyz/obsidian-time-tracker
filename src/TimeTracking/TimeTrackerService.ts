@@ -5,11 +5,15 @@ import { NoteService } from "src/NoteService";
 import { TrackerState } from "./Types/TrackerState";
 import { EventAwareService } from "src/Common/Service/EventAwareService";
 import { TrackerStateUpdateEvent } from "./Event/TrackerStateUpdateEvent";
-import moment from "moment";
+import moment, { Moment } from "moment";
+import { TrackerTimeUpdateEvent } from "./Event/TrackerTimeUpdateEvent";
+import { TrackerTime } from "./Types/TrackerTime";
+
 
 export class TimeTrackerService extends EventAwareService {
   readonly FRONT_MATTER_KEY = "time_tracking";
   private trackerState: TrackerState | undefined = undefined;
+  private trackerTimes: TrackerTime = {}
 
   constructor(
     private plugin: TimeTrackerPlugin,
@@ -28,13 +32,20 @@ export class TimeTrackerService extends EventAwareService {
       const settings = this.plugin.settings;
       let newState: TrackerState | undefined = undefined;
 
-      if (fm[settings.property_work_end]) {
+      this.trackerTimes.start = fm[settings.property_work_start];
+      this.trackerTimes.pause_start = fm[settings.property_pause_start];
+      this.trackerTimes.pause_end = fm[settings.property_pause_end];
+      this.trackerTimes.stopped = fm[settings.property_work_end];
+
+      this.eventTarget.dispatchEvent(new TrackerTimeUpdateEvent(this.getTimeRunning()))
+
+      if (this.trackerTimes.stopped) {
         newState = TrackerState.STOPPED;
-      } else if (fm[settings.property_pause_end]) {
+      } else if (this.trackerTimes.pause_end) {
         newState = TrackerState.PAUSE_STOPPED;
-      } else if (fm[settings.property_pause_start]) {
+      } else if (this.trackerTimes.pause_start) {
         newState = TrackerState.PAUSE_STARTED;
-      } else if (fm[settings.property_work_start]) {
+      } else if (this.trackerTimes.start) {
         newState = TrackerState.STARTED;
       } else {
         newState = TrackerState.NOT_RUNNING;
@@ -50,6 +61,26 @@ export class TimeTrackerService extends EventAwareService {
     });
   }
 
+  private calcWorkDurationOfDay(times: TrackerTime): string {
+    if (!times.start) {
+      return "00:00";
+    }
+
+    const start = moment.duration(times.start);
+    const end = times.stopped ? moment.duration(times.stopped) : moment.duration(moment().format("HH:mm"));
+    let diff = end.subtract(start)
+
+    if (!!times.pause_start && !!times.pause_end) {
+      diff = diff.subtract(
+        moment.duration(times.pause_end).subtract(moment.duration(times.pause_start))
+      )
+    }
+
+    const hours = diff.asHours();
+
+    return `${(hours | 0).toString().padStart(2, '0')}:${(Math.round(hours % 1 * 60)).toString().padStart(2, '0')}`;
+  }
+
   onload(): void {
     this.plugin.registerEvent(this.plugin.app.metadataCache.on('changed', (abstractFile: TAbstractFile) => {
       this.updateState();
@@ -59,9 +90,53 @@ export class TimeTrackerService extends EventAwareService {
     this.plugin.registerEvent(this.plugin.app.metadataCache.on("dataview:index-ready", () => {
       this.updateState();
     }));
+
+    this.registerInterval(window.setInterval(() => {
+      console.info("TICK");
+      this.updateState();
+    }, 60000));
   }
 
-  storeTime() {
+  getTimeRunning(): string {
+    return this.calcWorkDurationOfDay(this.trackerTimes);
+  }
+
+  getDurationBetweenDates(start: Moment, end: Moment): Promise<string> {
+    const settings = this.plugin.settings;
+    const ret: Promise<string>[] = [];
+    let d = start;
+
+    while (d.isBefore(end)) {
+      try {
+        const promise = this.noteService.processFrontMatter<string>(d, (fm: FrontMatterCache): string => {
+          return this.calcWorkDurationOfDay({
+            start: fm[settings.property_work_start],
+            pause_start: fm[settings.property_pause_start],
+            pause_end: fm[settings.property_pause_end],
+            stopped: fm[settings.property_work_end],
+          })
+        });
+
+        ret.push(promise);
+      } catch {
+        // ignore missing daily notes
+      }
+      d = d.add(1, "d");
+    }
+
+    return Promise.all(ret).then((values: string[]) => {
+      let ret = moment.duration("00:00");
+
+      for (const v of values) {
+        ret = ret.add(moment.duration(v));
+      }
+
+      const hours = ret.asHours();
+      return `${(hours | 0).toString().padStart(2, '0')}:${(Math.round(hours % 1 * 60)).toString().padStart(2, '0')}`;
+    });
+  }
+
+  storeTime(): void {
     const settings = this.plugin.settings;
 
     this.noteService.processFrontMatter(undefined, (fm: FrontMatterCache) => {
