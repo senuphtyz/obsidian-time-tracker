@@ -20,7 +20,6 @@ export const TimeTracker = (props: TimeTrackerProps) => {
     }
 
     const resizeObserver = new ResizeObserver(() => {
-      console.info("MUH", node.clientHeight < 182, node.clientHeight);
       setHidden(node.clientHeight < 182);
     });
 

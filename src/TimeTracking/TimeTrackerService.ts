@@ -92,7 +92,6 @@ export class TimeTrackerService extends EventAwareService {
     }));
 
     this.registerInterval(window.setInterval(() => {
-      console.info("TICK");
       this.updateState();
     }, 60000));
   }
