@@ -48,6 +48,14 @@ export class TimeTrackerView extends ItemView {
     }
 
     stateStore.setValue(event.newState);
+
+    if (event.newState == TrackerState.PAUSE_STARTED) {
+      this.plugin.taskTrackingService.stopRunningTracking(true);
+    } else if (event.oldState == TrackerState.PAUSE_STARTED && (event.newState == TrackerState.STARTED || event.newState == TrackerState.PAUSE_STOPPED)) {
+      this.plugin.taskTrackingService.resumeTracking();
+    } else if (event.newState == TrackerState.STOPPED) {
+      this.plugin.taskTrackingService.stopRunningTracking(false);
+    }
   }
 
   getViewType(): string {

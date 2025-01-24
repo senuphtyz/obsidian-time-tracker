@@ -60,7 +60,7 @@ export class TaskTrackingView extends ItemView {
         <AppContext.Provider value={appContext}>
           <TaskListComponent
             onStart={(t) => this.plugin.taskTrackingService.startTracking(t.text)}
-            onStop={(t) => this.plugin.taskTrackingService.stopRunningTracking()}
+            onStop={(t) => this.plugin.taskTrackingService.stopRunningTracking(false)}
             onJumpTo={(t) => this.onJumpToFile(t)}
           />
         </AppContext.Provider>

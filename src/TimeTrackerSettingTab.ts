@@ -154,6 +154,18 @@ export default class TimeTrackerSettingTab extends PluginSettingTab {
           await this.plugin.saveSettings();
         }));
 
+    new Setting(containerEl)
+      .setName('Auto task transition')
+      .setDesc('Automatic task transition on pausing or resuming time tracking')
+      .addToggle((toggle) => {
+        toggle
+          .setValue(this.plugin.settings.auto_task_transition)
+          .onChange(async (value) => {
+            this.plugin.settings.auto_task_transition = value;
+            await this.plugin.saveSettings();
+          });
+      });
+
     this.addMobaTimeSettings(containerEl);
   }
 

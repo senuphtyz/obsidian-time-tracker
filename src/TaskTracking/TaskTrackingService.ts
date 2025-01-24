@@ -242,7 +242,7 @@ export class TaskTrackingService extends EventAwareService {
   /**
    * Stops tracking of the current active task.
    */
-  stopRunningTracking() {
+  stopRunningTracking(paused: boolean) {
     const runningTaskEntry = this.cache.runningTaskEntry;
     if (!runningTaskEntry) {
       return;
@@ -258,6 +258,13 @@ export class TaskTrackingService extends EventAwareService {
 
         if (itm.task == this.runningTaskEntry?.text && itm.start == this.runningTaskEntry.start?.format('HH:mm')) {
           itm.end = moment().format('HH:mm')
+
+          if (paused) {
+            itm.payload = {
+              ...itm.payload,
+              paused: true,
+            };
+          }
 
           if (itm.start == itm.end) {
             fm[this.FRONT_MATTER_KEY].splice(fm[this.FRONT_MATTER_KEY].indexOf(itm), 1);
@@ -277,7 +284,7 @@ export class TaskTrackingService extends EventAwareService {
    * @param taskText Text of the task to start.
    */
   startTracking(taskText: string) {
-    this.stopRunningTracking();
+    this.stopRunningTracking(false);
 
     this.noteService.processFrontMatter(undefined, (fm: FrontMatterCache, file: TFile) => {
       if (!(this.FRONT_MATTER_KEY in fm)) {
@@ -299,6 +306,28 @@ export class TaskTrackingService extends EventAwareService {
       }, file.path)
 
       this.eventTarget.dispatchEvent(new ActiveTaskStartedEvent(this.runningTaskEntry));
+    });
+  }
+
+  resumeTracking() {
+    const runningTaskEntry = this.cache.runningTaskEntry;
+    if (runningTaskEntry) {
+      return;
+    }
+
+    this.noteService.processFrontMatter(undefined, (fm: FrontMatterCache) => {
+      if (!fm[this.FRONT_MATTER_KEY]) {
+        return;
+      }
+
+      for (const i of fm[this.FRONT_MATTER_KEY]) {
+        const itm = (i as TaskTrackingEntry);
+
+        if (itm.payload?.paused) {
+          itm.payload.paused = false;
+          this.startTracking(itm.task);
+        }
+      }
     });
   }
 }
