@@ -41,11 +41,8 @@ export class TimeTrackerService extends EventAwareService {
       }
 
       if (this.trackerState == newState) {
-        console.info("NO UPDATE", newState);
         return;
       }
-
-      console.info("UPDATE NEW STATE", newState, this.trackerState);
 
       const oldState = this.trackerState;
       this.trackerState = newState;
@@ -54,16 +51,12 @@ export class TimeTrackerService extends EventAwareService {
   }
 
   onload(): void {
-    console.info("onload!");
-
     this.plugin.registerEvent(this.plugin.app.metadataCache.on('changed', (abstractFile: TAbstractFile) => {
-      console.info("metacache update");
       this.updateState();
     }));
 
     // @ts-ignore
     this.plugin.registerEvent(this.plugin.app.metadataCache.on("dataview:index-ready", () => {
-      console.info("dataview:index-ready");
       this.updateState();
     }));
   }

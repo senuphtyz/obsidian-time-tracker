@@ -22,7 +22,6 @@ export class TimeTrackerView extends ItemView {
   }
 
   private updateState(event: TrackerStateUpdateEvent): void {
-    console.info("UPDATE STATE", event.oldState, event.newState);
     if (event.newState === undefined) {
       stateStore.setValue(TrackerState.NOT_RUNNING);
       return;
@@ -40,7 +39,6 @@ export class TimeTrackerView extends ItemView {
   }
 
   onEvent(): void {
-    console.info("STORE TIME!");
     this.plugin.timeTrackingService.storeTime();
   }
 
