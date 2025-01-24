@@ -34,6 +34,7 @@ export default class TimeTrackerPlugin extends Plugin {
 
     this.addChild(this.cache);
     this.addChild(this.taskTrackingService);
+    this.addChild(this.timeTrackingService);
   }
 
   /**

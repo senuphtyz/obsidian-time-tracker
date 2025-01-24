@@ -1,5 +1,5 @@
 import moment from "moment";
-import { Component, type FrontMatterCache, type TAbstractFile, type TFile } from "obsidian";
+import { type FrontMatterCache, type TAbstractFile, type TFile } from "obsidian";
 import type TimeTrackerPlugin from "../TimeTrackerPlugin";
 import { isDailyNote } from "../Utils/NoteUtils";
 import type { TaskTrackingEntry } from "./Types/TaskTrackingEntry";
@@ -13,13 +13,13 @@ import { ActiveTaskStartedEvent } from "./Event/ActiveTaskStartedEvent";
 import { ActiveTaskStoppedEvent } from "./Event/AcitveTaskStoppedEvent";
 import { CacheUpdatedEvent } from "./Event/CacheUpdatedEvent";
 import type { ReferencedTrackingEntry } from "./Types/ReferencedTrackingEntry";
+import { EventAwareService } from "src/Common/Service/EventAwareService";
 
 
 type LevenshteinMap = { task: Task, distance: number };
 
-export class TaskTrackingService extends Component {
+export class TaskTrackingService extends EventAwareService {
   readonly FRONT_MATTER_KEY = "time_tracking";
-  private eventTarget: EventTarget;
   private taskReferenceQueue: Set<ReferencedTrackingEntry>;
 
   constructor(
@@ -29,7 +29,6 @@ export class TaskTrackingService extends Component {
     private noteService: NoteService
   ) {
     super();
-    this.eventTarget = new EventTarget();
     this.taskReferenceQueue = new Set();
 
     if (this.api === null) {
@@ -60,20 +59,6 @@ export class TaskTrackingService extends Component {
     } else {
       this.cacheTrackingData();
     }
-  }
-
-  /**
-   * Wrapper for addEventListener.
-   */
-  addEventListener(type: string, callback: EventListenerOrEventListenerObject | null, options?: AddEventListenerOptions | boolean): void {
-    this.eventTarget.addEventListener(type, callback, options);
-  }
-
-  /**
-   * Wrapper for removeEventListener.
-   */
-  removeEventListener(type: string, callback: EventListenerOrEventListenerObject | null, options?: EventListenerOptions | boolean): void {
-    this.eventTarget.removeEventListener(type, callback, options);
   }
 
   private findReferencedTask(taskTrackingEntry: TaskTrackingEntry): Task | null {

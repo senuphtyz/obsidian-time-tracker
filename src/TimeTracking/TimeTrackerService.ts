@@ -1,14 +1,15 @@
 import TimeTrackerPlugin from "src/TimeTrackerPlugin";
 import { type DataviewApi } from "obsidian-dataview";
-import { Component, FrontMatterCache, TFile } from "obsidian";
+import { FrontMatterCache, TAbstractFile } from "obsidian";
 import { NoteService } from "src/NoteService";
 import { TrackerState } from "./Types/TrackerState";
+import { EventAwareService } from "src/Common/Service/EventAwareService";
+import { TrackerStateUpdateEvent } from "./Event/TrackerStateUpdateEvent";
 import moment from "moment";
 
-
-export class TimeTrackerService extends Component {
+export class TimeTrackerService extends EventAwareService {
   readonly FRONT_MATTER_KEY = "time_tracking";
-  private eventTarget: EventTarget;
+  private trackerState: TrackerState | undefined = undefined;
 
   constructor(
     private plugin: TimeTrackerPlugin,
@@ -16,122 +17,81 @@ export class TimeTrackerService extends Component {
     private noteService: NoteService
   ) {
     super();
-    this.eventTarget = new EventTarget();
 
     if (this.api === null) {
       throw new Error('Dataview API cannot be null');
     }
   }
 
-  onload(): void {
-    // this.plugin.registerEvent(this.plugin.app.metadataCache.on('changed', (abstractFile: TAbstractFile) => {
-    //   if (isDailyNote(this.plugin.app, abstractFile)) {
-    //     this.updateCacheForFile(abstractFile);
-    //     this.eventTarget.dispatchEvent(new CacheUpdatedEvent());
-    //   }
-    // }));
-
-    // // @ts-ignore
-    // this.plugin.registerEvent(this.plugin.app.metadataCache.on("dataview:index-ready", () => {
-    //   for (const e of this.taskReferenceQueue) {
-    //     e.taskReference = this.findReferencedTask(e.entry);
-    //   }
-
-    //   this.taskReferenceQueue.clear();
-    //   this.eventTarget.dispatchEvent(new CacheUpdatedEvent());
-    // }));
-
-    // if (!this.plugin.app.workspace.layoutReady) {
-    //   this.plugin.app.workspace.onLayoutReady(async () => this.cacheTrackingData());
-    // } else {
-    //   this.cacheTrackingData();
-    // }
-  }
-
-  /**
-   * Wrapper for addEventListener.
-   */
-  addEventListener(type: string, callback: EventListenerOrEventListenerObject | null, options?: AddEventListenerOptions | boolean): void {
-    this.eventTarget.addEventListener(type, callback, options);
-  }
-
-  /**
-   * Wrapper for removeEventListener.
-   */
-  removeEventListener(type: string, callback: EventListenerOrEventListenerObject | null, options?: EventListenerOptions | boolean): void {
-    this.eventTarget.removeEventListener(type, callback, options);
-  }
-
-  getCurrentState(): TrackerState {
-    try {
+  private updateState(): void {
+    this.noteService.processFrontMatter(undefined, (fm: FrontMatterCache) => {
       const settings = this.plugin.settings;
-      let ret = TrackerState.NOT_RUNNING;
+      let newState: TrackerState | undefined = undefined;
 
-      this.noteService.processFrontMatter(undefined, (fmc: FrontMatterCache) => {
-        console.info(fmc, fmc[settings.property_work_start]);
+      if (fm[settings.property_work_end]) {
+        newState = TrackerState.STOPPED;
+      } else if (fm[settings.property_pause_end]) {
+        newState = TrackerState.PAUSE_STOPPED;
+      } else if (fm[settings.property_pause_start]) {
+        newState = TrackerState.PAUSE_STARTED;
+      } else if (fm[settings.property_work_start]) {
+        newState = TrackerState.STARTED;
+      } else {
+        newState = TrackerState.NOT_RUNNING;
+      }
 
-        if (fmc[settings.property_work_start]) {
-          ret = TrackerState.STARTED;
-          return;
-        }
+      if (this.trackerState == newState) {
+        console.info("NO UPDATE", newState);
+        return;
+      }
 
-        if (fmc[settings.property_pause_start]) {
-          ret = TrackerState.PAUSED;
-          return;
-        }
+      console.info("UPDATE NEW STATE", newState, this.trackerState);
 
-        if (fmc[settings.property_pause_end]) {
-          ret = TrackerState.STARTED;
-          return;
-        }
+      const oldState = this.trackerState;
+      this.trackerState = newState;
+      this.eventTarget.dispatchEvent(new TrackerStateUpdateEvent(oldState, newState));
+    });
+  }
 
-        if (fmc[settings.property_work_end]) {
-          ret = TrackerState.STOPPED;
-          return;
-        }
-      });
+  onload(): void {
+    console.info("onload!");
 
-      console.info("RET", ret);
-      return ret;
-    } catch (ex) {
-      console.error(ex);
-    }
+    this.plugin.registerEvent(this.plugin.app.metadataCache.on('changed', (abstractFile: TAbstractFile) => {
+      console.info("metacache update");
+      this.updateState();
+    }));
 
-    return TrackerState.NOT_RUNNING;
+    // @ts-ignore
+    this.plugin.registerEvent(this.plugin.app.metadataCache.on("dataview:index-ready", () => {
+      console.info("dataview:index-ready");
+      this.updateState();
+    }));
   }
 
   storeTime() {
+    const settings = this.plugin.settings;
+
     this.noteService.processFrontMatter(undefined, (fm: FrontMatterCache) => {
-      let property;
-
-      switch (this.getCurrentState()) {
-        case TrackerState.NOT_RUNNING:
-          property = this.plugin.settings.property_work_start;
-          break;
-
-        case TrackerState.STARTED:
-          property = this.plugin.settings.property_pause_start;
-
-          if (this.plugin.settings.property_pause_end in fm && !fm[this.plugin.settings.property_pause_end]) {
-            property = this.plugin.settings.property_work_end;
-          }
-          break;
-
-        case TrackerState.PAUSED:
-          property = this.plugin.settings.property_pause_end;
-          break;
-
-        case TrackerState.STOPPED:
-          property = this.plugin.settings.property_work_end;
-          break;
-      }
-
-
       let currentTime = moment();
       currentTime = currentTime.seconds(0).minutes(
         currentTime.seconds(0).minutes() - (currentTime.seconds(0).minutes() % 15)
       )
-      fm[property] = currentTime.format("HH:mm");
+      const currentTimeString = currentTime.format("HH:mm");
+
+      if (this.trackerState === undefined || this.trackerState === TrackerState.NOT_RUNNING) {
+        // change from NOT_RUNNING to STARTED
+        fm[settings.property_work_start] = currentTimeString;
+      } else if (this.trackerState === TrackerState.STARTED) {
+        // change from STARTED to PAUSE_STARTED
+        fm[settings.property_pause_start] = currentTimeString;
+      } else if (this.trackerState === TrackerState.PAUSE_STARTED) {
+        // change from PAUSE_STARTED to PAUSE_STOPPED
+        fm[settings.property_pause_end] = currentTimeString;
+      } else if (this.trackerState === TrackerState.PAUSE_STOPPED || this.trackerState === TrackerState.STOPPED) {
+        fm[settings.property_work_end] = currentTimeString;
+      }
+
+      this.updateState();
     });
   }
 }

@@ -18,8 +18,11 @@ const TimeTrackerStateIcon = (props: TimeTrackerStateIconProps) => {
     case TrackerState.STARTED:
       return <Play size={props.size} />
 
-    case TrackerState.PAUSED:
+    case TrackerState.PAUSE_STARTED:
       return <Pause size={props.size} />
+
+    case TrackerState.PAUSE_STOPPED:
+      return <Play size={props.size} />
 
     case TrackerState.STOPPED:
       return <Square size={props.size} />

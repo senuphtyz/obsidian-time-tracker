@@ -3,6 +3,7 @@
 export enum TrackerState {
   NOT_RUNNING,
   STARTED,
-  PAUSED,
+  PAUSE_STARTED,
+  PAUSE_STOPPED,
   STOPPED
 }

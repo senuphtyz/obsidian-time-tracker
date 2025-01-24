@@ -4,6 +4,8 @@ import { StrictMode } from "react";
 import { Root, createRoot } from 'react-dom/client';
 import { AppContext, AppContextValue } from "src/Common/UI/Contexts";
 import { TimeTracker } from "./UI/TimeTracker";
+import { TrackerStateUpdateEvent } from "./Event/TrackerStateUpdateEvent";
+import { TrackerState } from "./Types/TrackerState";
 import { stateStore } from "./UI/Stores";
 
 export const VIEW_TYPE = "time-tracker-time-tracker-view";
@@ -14,27 +16,19 @@ export class TimeTrackerView extends ItemView {
   constructor(leaf: WorkspaceLeaf, private plugin: TimeTrackerPlugin) {
     super(leaf);
 
-    // this.plugin.taskTrackingService.addEventListener(ActiveTaskStartedEvent.EVENT_NAME, (evt: Event) => {
-    //   const e: ActiveTaskStartedEvent = (evt as ActiveTaskStartedEvent);
-    //   runningTaskStore.setValue(e.task);
-    // });
-
-    // this.plugin.taskTrackingService.addEventListener(ActiveTaskStoppedEvent.EVENT_NAME, (evt: Event) => {
-    //   runningTaskStore.setValue(undefined);
-    // });
-
-    // this.plugin.taskTrackingService.addEventListener(CacheUpdatedEvent.EVENT_NAME, (evt: Event) => {
-    //   runningTaskStore.setValue(this.plugin.taskTrackingService.runningTaskEntry);
-    //   taskStore.setValue(this.plugin.taskTrackingService.getListOfPreselectedTasks());
-    // });
-
-    // // @ts-ignore
-    // this.plugin.registerEvent(this.plugin.app.metadataCache.on("dataview:metadata-change", () => {
-    //   runningTaskStore.setValue(this.plugin.taskTrackingService.runningTaskEntry);
-    //   taskStore.setValue(this.plugin.taskTrackingService.getListOfPreselectedTasks());
-    // }));
+    this.plugin.timeTrackingService.addEventListener(TrackerStateUpdateEvent.EVENT_NAME, this.updateState);
 
     this.root = createRoot(this.containerEl.children[1]);
+  }
+
+  private updateState(event: TrackerStateUpdateEvent): void {
+    console.info("UPDATE STATE", event.oldState, event.newState);
+    if (event.newState === undefined) {
+      stateStore.setValue(TrackerState.NOT_RUNNING);
+      return;
+    }
+
+    stateStore.setValue(event.newState);
   }
 
   getViewType(): string {
@@ -46,16 +40,11 @@ export class TimeTrackerView extends ItemView {
   }
 
   onEvent(): void {
-    console.info("MUUH", this.plugin.timeTrackingService.getCurrentState());
+    console.info("STORE TIME!");
     this.plugin.timeTrackingService.storeTime();
-
-    const nextState = this.plugin.timeTrackingService.getCurrentState();
-    stateStore.setValue(nextState);
   }
 
   async onOpen(): Promise<void> {
-    stateStore.setValue(this.plugin.timeTrackingService.getCurrentState());
-
     const appContext: AppContextValue = {
       settings: this.plugin.settings,
       view: this,
@@ -72,5 +61,6 @@ export class TimeTrackerView extends ItemView {
 
   async onClose(): Promise<void> {
     this.root?.unmount();
+    this.plugin.timeTrackingService.removeEventListener(TrackerStateUpdateEvent.EVENT_NAME, this.updateState);
   }
 }
