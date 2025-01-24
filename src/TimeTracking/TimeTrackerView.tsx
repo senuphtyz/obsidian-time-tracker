@@ -36,6 +36,11 @@ export class TimeTrackerView extends ItemView {
     });
   }
 
+  /**
+   * Updates the state of the time tracker in ui components.
+   * 
+   * @param event The event that contains the new state of the time tracker
+   */
   private updateState(event: TrackerStateUpdateEvent): void {
     if (event.newState === undefined) {
       stateStore.setValue(TrackerState.NOT_RUNNING);

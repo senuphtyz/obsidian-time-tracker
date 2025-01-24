@@ -61,6 +61,12 @@ export class TaskTrackingService extends EventAwareService {
     }
   }
 
+  /**
+   * Find a task by its name and return it if found, otherwise null.
+   * 
+   * @param taskTrackingEntry The entry to search for.
+   * @returns The task if it was found, otherwise null.
+   */
   private findReferencedTask(taskTrackingEntry: TaskTrackingEntry): Task | null {
     if (!this.api.index.initialized) {
       console.info("Index not ready skip search");
@@ -97,6 +103,12 @@ export class TaskTrackingService extends EventAwareService {
     return null;
   }
 
+  /**
+   * Updates the cache for a given file.
+   * 
+   * @param abstractFile The file to update the cache for.
+   * @returns True if the cache was updated, false otherwise.
+   */
   private updateCacheForFile(abstractFile: TAbstractFile): boolean {
     const fm = this.plugin.app.metadataCache.getCache(abstractFile.path)?.frontmatter;
 
@@ -125,7 +137,9 @@ export class TaskTrackingService extends EventAwareService {
   }
 
   /**
-   * Returns the current running task
+   * Get the currently running task entry or undefined if there is no running task entry.
+   * 
+   * @returns the currently running task entry
    */
   get runningTaskEntry(): TaskListEntry | undefined {
     const runningTask = this.cache.runningTaskEntry;

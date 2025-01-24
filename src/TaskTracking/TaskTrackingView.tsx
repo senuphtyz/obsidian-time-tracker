@@ -68,6 +68,9 @@ export class TaskTrackingView extends ItemView {
     )
   }
 
+  /**
+   * Jump to the file of a task.
+   */
   onJumpToFile(task: TaskListEntry) {
     const file = this.app.vault.getFileByPath(task.path);
 

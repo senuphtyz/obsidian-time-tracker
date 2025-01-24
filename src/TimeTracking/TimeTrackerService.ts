@@ -27,6 +27,9 @@ export class TimeTrackerService extends EventAwareService {
     }
   }
 
+  /**
+   * Updating the tracker state and time values and notifying subscribers about it.
+   */
   private updateState(): void {
     this.noteService.processFrontMatter(undefined, (fm: FrontMatterCache) => {
       const settings = this.plugin.settings;
@@ -61,6 +64,12 @@ export class TimeTrackerService extends EventAwareService {
     });
   }
 
+  /**
+   * Calculates the duration of work for a day.
+   * 
+   * @param times The tracker time object to calculate the duration for.
+   * @returns The duration of work for the day in HH:mm format.
+   */
   private calcWorkDurationOfDay(times: TrackerTime): string {
     if (!times.start) {
       return "00:00";
@@ -96,10 +105,20 @@ export class TimeTrackerService extends EventAwareService {
     }, 60000));
   }
 
+  /**
+   * Calculates the duration for the current day and returns it as a string in the format HH:MM.
+   */
   getTimeRunning(): string {
     return this.calcWorkDurationOfDay(this.trackerTimes);
   }
 
+  /**
+   * Calculates the duration between two dates and returns it as a string in the format HH:MM.
+   * 
+   * @param start The start date.
+   * @param end The end date.
+   * @returns The duration between the two dates as a string in the format HH:MM.
+   */
   getDurationBetweenDates(start: Moment, end: Moment): Promise<string> {
     const settings = this.plugin.settings;
     const ret: Promise<string>[] = [];
@@ -135,6 +154,10 @@ export class TimeTrackerService extends EventAwareService {
     });
   }
 
+  /**
+   * Write the time of the current day into the frontmatter.
+   * Depending on the state of the tracker, this will either start or stop tracking time.
+   */
   storeTime(): void {
     const settings = this.plugin.settings;
 
