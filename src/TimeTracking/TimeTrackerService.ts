@@ -31,37 +31,45 @@ export class TimeTrackerService extends EventAwareService {
    * Updating the tracker state and time values and notifying subscribers about it.
    */
   private updateState(): void {
-    this.noteService.processFrontMatter(undefined, (fm: FrontMatterCache) => {
-      const settings = this.plugin.settings;
-      let newState: TrackerState | undefined = undefined;
+    try {
+      this.noteService.processFrontMatter(undefined, (fm: FrontMatterCache) => {
+        const settings = this.plugin.settings;
+        let newState: TrackerState | undefined = undefined;
 
-      this.trackerTimes.start = fm[settings.property_work_start];
-      this.trackerTimes.pause_start = fm[settings.property_pause_start];
-      this.trackerTimes.pause_end = fm[settings.property_pause_end];
-      this.trackerTimes.stopped = fm[settings.property_work_end];
+        this.trackerTimes.start = fm[settings.property_work_start];
+        this.trackerTimes.pause_start = fm[settings.property_pause_start];
+        this.trackerTimes.pause_end = fm[settings.property_pause_end];
+        this.trackerTimes.stopped = fm[settings.property_work_end];
 
-      this.eventTarget.dispatchEvent(new TrackerTimeUpdateEvent(this.getTimeRunning()))
+        this.eventTarget.dispatchEvent(new TrackerTimeUpdateEvent(this.getTimeRunning()))
 
-      if (this.trackerTimes.stopped) {
-        newState = TrackerState.STOPPED;
-      } else if (this.trackerTimes.pause_end) {
-        newState = TrackerState.PAUSE_STOPPED;
-      } else if (this.trackerTimes.pause_start) {
-        newState = TrackerState.PAUSE_STARTED;
-      } else if (this.trackerTimes.start) {
-        newState = TrackerState.STARTED;
+        if (this.trackerTimes.stopped) {
+          newState = TrackerState.STOPPED;
+        } else if (this.trackerTimes.pause_end) {
+          newState = TrackerState.PAUSE_STOPPED;
+        } else if (this.trackerTimes.pause_start) {
+          newState = TrackerState.PAUSE_STARTED;
+        } else if (this.trackerTimes.start) {
+          newState = TrackerState.STARTED;
+        } else {
+          newState = TrackerState.NOT_RUNNING;
+        }
+
+        if (this.trackerState == newState) {
+          return;
+        }
+
+        const oldState = this.trackerState;
+        this.trackerState = newState;
+        this.eventTarget.dispatchEvent(new TrackerStateUpdateEvent(oldState, newState));
+      });
+    } catch (ex) {
+      if (ex instanceof DailyNoteMissingException) {
+        this.eventTarget.dispatchEvent(new TrackerStateUpdateEvent(undefined, TrackerState.NOT_RUNNING));
       } else {
-        newState = TrackerState.NOT_RUNNING;
+        console.error('Error while calculating tracker state', ex);
       }
-
-      if (this.trackerState == newState) {
-        return;
-      }
-
-      const oldState = this.trackerState;
-      this.trackerState = newState;
-      this.eventTarget.dispatchEvent(new TrackerStateUpdateEvent(oldState, newState));
-    });
+    }
   }
 
   /**
