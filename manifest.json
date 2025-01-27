@@ -1,7 +1,7 @@
 {
 	"id": "time-tracker",
 	"name": "Time Tracker Plugin",
-	"version": "2.0.0",
+	"version": "2.1.0-rc1",
 	"minAppVersion": "0.15.0",
 	"description": "Track times using daily notes.",
 	"author": "Bruno Lorenz <b.lorenz-github@afterspring.org>",
