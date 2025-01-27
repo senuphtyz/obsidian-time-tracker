@@ -1,7 +1,6 @@
-import type { FrontMatterCache, TAbstractFile, TFile } from "obsidian";
+import { moment, type FrontMatterCache, type TAbstractFile, type TFile } from "obsidian";
 import type TimeTrackerPlugin from "./TimeTrackerPlugin";
 import type { Moment } from "moment";
-import moment from "moment";
 import { DailyNoteMissingException } from "./Exception";
 
 export type ProcessFrontMatterFn<T> = (fm: FrontMatterCache, file: TFile) => T;

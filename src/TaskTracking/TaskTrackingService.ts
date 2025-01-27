@@ -1,5 +1,4 @@
-import moment from "moment";
-import { type FrontMatterCache, type TAbstractFile, type TFile } from "obsidian";
+import { moment, type FrontMatterCache, type TAbstractFile, type TFile } from "obsidian";
 import type TimeTrackerPlugin from "../TimeTrackerPlugin";
 import { isDailyNote } from "../Utils/NoteUtils";
 import type { TaskTrackingEntry } from "./Types/TaskTrackingEntry";
@@ -13,7 +12,7 @@ import { ActiveTaskStartedEvent } from "./Event/ActiveTaskStartedEvent";
 import { ActiveTaskStoppedEvent } from "./Event/AcitveTaskStoppedEvent";
 import { CacheUpdatedEvent } from "./Event/CacheUpdatedEvent";
 import type { ReferencedTrackingEntry } from "./Types/ReferencedTrackingEntry";
-import { EventAwareService } from "src/Common/Service/EventAwareService";
+import { EventAwareService } from "../Common/Service/EventAwareService";
 
 
 type LevenshteinMap = { task: Task, distance: number };
