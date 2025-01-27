@@ -41,7 +41,6 @@ export default class TimeTrackerPlugin extends Plugin {
    * Update all view members after changes.
    */
   updateView() {
-    this.statusBar?.update();
   }
 
   async onload() {

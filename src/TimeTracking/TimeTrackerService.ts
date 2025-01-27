@@ -8,6 +8,7 @@ import { TrackerStateUpdateEvent } from "./Event/TrackerStateUpdateEvent";
 import moment, { Moment } from "moment";
 import { TrackerTimeUpdateEvent } from "./Event/TrackerTimeUpdateEvent";
 import { TrackerTime } from "./Types/TrackerTime";
+import { DailyNoteMissingException } from "src/Exception";
 
 
 export class TimeTrackerService extends EventAwareService {
