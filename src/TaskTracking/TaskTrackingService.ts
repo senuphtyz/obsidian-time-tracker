@@ -75,7 +75,7 @@ export class TaskTrackingService extends EventAwareService {
     const taskList = this.api.pages().file.tasks.filter((task: Task) => task.text == taskTrackingEntry.task);
 
     if (taskList.length == 1) {
-      console.info("findReferenedTask [FOUND: Direct]", taskTrackingEntry.task);
+      // console.info("findReferenedTask [FOUND: Direct]", taskTrackingEntry.task);
       return taskList[0];
     }
 
@@ -95,7 +95,7 @@ export class TaskTrackingService extends EventAwareService {
       .map((i: LevenshteinMap) => i.task);
 
     if (referencedTask.length > 0) {
-      console.info("findReferenedTask [FOUND: Levensthein]", taskTrackingEntry.task);
+      // console.info("findReferenedTask [FOUND: Levensthein]", taskTrackingEntry.task);
       return referencedTask[0];
     }
 
