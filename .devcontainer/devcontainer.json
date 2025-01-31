@@ -1,47 +1,48 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/typescript-node
 {
-	"name": "Node.js & TypeScript",
-	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"build": {
-		"dockerfile": "Dockerfile"
-	},
-	// Features to add to the dev container. More info: https://containers.dev/features.
-	// "features": {},
-	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	// "forwardPorts": [],
-	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "npm install",
-	"customizations": {
-		"vscode": {
-			"extensions": [
-				"firsttris.vscode-jest-runner",
-				"GitHub.vscode-github-actions",
-				"Orta.vscode-jest",
-				"msjsdiag.vscode-react-native"
-			],
-			"settings": {
-				"deno.enable": true,
-				"editor.rulers": [
-					160
-				],
-				"editor.indentSize": 2,
-				"editor.formatOnSave": true,
-				"editor.detectIndentation": false,
-				"[typescript]": {
-					"editor.insertSpaces": true
-				},
-				"[typescriptreact]": {
-					"editor.insertSpaces": true
-				},
-				"[json]": {
-					"editor.insertSpaces": true
-				}
-			}
-		}
-	}
-	// Configure tool-specific properties.
-	// "customizations": {},
-	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-	// "remoteUser": "root"
+  "name": "Node.js & TypeScript",
+  // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  // Features to add to the dev container. More info: https://containers.dev/features.
+  // "features": {},
+  // Use 'forwardPorts' to make a list of ports inside the container available locally.
+  // "forwardPorts": [],
+  // Use 'postCreateCommand' to run commands after the container is created.
+  "postCreateCommand": "npm install",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "firsttris.vscode-jest-runner",
+        "GitHub.vscode-github-actions",
+        "Orta.vscode-jest",
+        "msjsdiag.vscode-react-native"
+      ],
+      "settings": {
+        "deno.enable": true,
+        "editor.rulers": [
+          160
+        ],
+        "terminal.integrated.defaultProfile.linux": "zsh",
+        "editor.indentSize": 2,
+        "editor.formatOnSave": true,
+        "editor.detectIndentation": false,
+        "[typescript]": {
+          "editor.insertSpaces": true
+        },
+        "[typescriptreact]": {
+          "editor.insertSpaces": true
+        },
+        "[json]": {
+          "editor.insertSpaces": true
+        }
+      }
+    }
+  }
+  // Configure tool-specific properties.
+  // "customizations": {},
+  // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+  // "remoteUser": "root"
 }

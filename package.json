@@ -1,6 +1,6 @@
 {
   "name": "obsidian-time-tracker",
-  "version": "2.0.0",
+  "version": "2.1.0-rc1",
   "description": "Track times using daily notes.",
   "main": "main.js",
   "scripts": {
@@ -33,6 +33,7 @@
   },
   "dependencies": {
     "fastest-levenshtein": "^1.0.16",
+    "jest-environment-jsdom": "^29.7.0",
     "localforage": "^1.10.0",
     "lucide-react": "^0.473.0",
     "obsidian": "latest",

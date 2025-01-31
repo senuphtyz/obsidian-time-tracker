@@ -2,7 +2,7 @@ import React, { useContext } from "react";
 import { CalendarClock } from "lucide-react";
 import moment from "moment";
 import type { TaskListEntry } from "../Types/TaskListEntry";
-import { AppContext, AppContextValue } from "./Contexts";
+import { AppContext, AppContextValue } from "../../Common/UI/Contexts";
 
 export interface LastTrackedProps {
   task: TaskListEntry

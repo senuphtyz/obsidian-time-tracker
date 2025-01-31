@@ -21,12 +21,14 @@ FROM mcr.microsoft.com/devcontainers/typescript-node:1-20-bullseye
 
 COPY --from=build --chown=root:root /tmp/nanolayer /nanolayer
 COPY --from=rustBuild --chown=root:root /tmp/bfs/bin/bfs /usr/local/bin/bfs
-COPY --chown=1000:1000 zshrc /home/vscode/.zshrc
+COPY --chown=1000:1000 zshrc /home/node/.zshrc
 
+RUN /nanolayer install apt-get vim
 RUN /nanolayer install gh-release 'sharkdp/bat' 'bat'
 RUN /nanolayer install gh-release 'junegunn/fzf' 'fzf'
 RUN /nanolayer install gh-release 'ajeetdsouza/zoxide' 'zoxide'
 RUN /nanolayer install gh-release --asset-regex '\.tar\.gz$' 'eza-community/eza' 'eza'
 RUN /nanolayer install gh-release 'astral-sh/uv' 'uv'
+RUN /nanolayer install gh-release 'Wilfred/difftastic' 'difft'
 # RUN /nanolayer install gh-release --asset-regex '^deno\-' 'denoland/deno' 'deno'
 

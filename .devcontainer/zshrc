@@ -74,6 +74,7 @@ ZSH_THEME="devcontainers"
 plugins=(git fzf zoxide)
 
 # Settings for oh-my-zsh plugins
+export FZF_BASE="/usr/local/bin/fzf"
 export FZF_DEFAULT_COMMAND="bfs -hidden  -exclude -name .git -printf '%P\n'"
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 export FZF_ALT_C_COMMAND="bfs -hidden  -exclude -name .git -printf '%P\n' -type d"
@@ -154,6 +155,7 @@ DISABLE_UPDATE_PROMPT=true
 # User configuration
 export EDITOR='vim'
 export GIT_EDITOR='vim'
+export GIT_EXTERNAL_DIFF='difft'
 
 alias find="bfs -noerror -x"
 alias ls="eza --smart-group --group-directories-first"

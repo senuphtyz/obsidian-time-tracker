@@ -4,7 +4,7 @@ import type TimeTrackerPlugin from "../TimeTrackerPlugin";
 import { StrictMode } from "react";
 import { Root, createRoot } from 'react-dom/client';
 import { CacheUpdatedEvent } from "./Event/CacheUpdatedEvent";
-import { AppContext, AppContextValue } from "./UI/Contexts";
+import { AppContext, AppContextValue } from "../Common/UI/Contexts";
 import { runningTaskStore, taskStore } from "./UI/Stores";
 import { ActiveTaskStartedEvent } from "./Event/ActiveTaskStartedEvent";
 import { ActiveTaskStoppedEvent } from "./Event/AcitveTaskStoppedEvent";
@@ -60,7 +60,7 @@ export class TaskTrackingView extends ItemView {
         <AppContext.Provider value={appContext}>
           <TaskListComponent
             onStart={(t) => this.plugin.taskTrackingService.startTracking(t.text)}
-            onStop={(t) => this.plugin.taskTrackingService.stopRunningTracking()}
+            onStop={(t) => this.plugin.taskTrackingService.stopRunningTracking(false)}
             onJumpTo={(t) => this.onJumpToFile(t)}
           />
         </AppContext.Provider>
@@ -68,6 +68,9 @@ export class TaskTrackingView extends ItemView {
     )
   }
 
+  /**
+   * Jump to the file of a task.
+   */
   onJumpToFile(task: TaskListEntry) {
     const file = this.app.vault.getFileByPath(task.path);
 

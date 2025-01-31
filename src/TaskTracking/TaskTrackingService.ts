@@ -1,5 +1,4 @@
-import moment from "moment";
-import { Component, type FrontMatterCache, type TAbstractFile, type TFile } from "obsidian";
+import { moment, type FrontMatterCache, type TAbstractFile, type TFile } from "obsidian";
 import type TimeTrackerPlugin from "../TimeTrackerPlugin";
 import { isDailyNote } from "../Utils/NoteUtils";
 import type { TaskTrackingEntry } from "./Types/TaskTrackingEntry";
@@ -13,13 +12,13 @@ import { ActiveTaskStartedEvent } from "./Event/ActiveTaskStartedEvent";
 import { ActiveTaskStoppedEvent } from "./Event/AcitveTaskStoppedEvent";
 import { CacheUpdatedEvent } from "./Event/CacheUpdatedEvent";
 import type { ReferencedTrackingEntry } from "./Types/ReferencedTrackingEntry";
+import { EventAwareService } from "../Common/Service/EventAwareService";
 
 
 type LevenshteinMap = { task: Task, distance: number };
 
-export class TaskTrackingService extends Component {
+export class TaskTrackingService extends EventAwareService {
   readonly FRONT_MATTER_KEY = "time_tracking";
-  private eventTarget: EventTarget;
   private taskReferenceQueue: Set<ReferencedTrackingEntry>;
 
   constructor(
@@ -29,7 +28,6 @@ export class TaskTrackingService extends Component {
     private noteService: NoteService
   ) {
     super();
-    this.eventTarget = new EventTarget();
     this.taskReferenceQueue = new Set();
 
     if (this.api === null) {
@@ -63,19 +61,11 @@ export class TaskTrackingService extends Component {
   }
 
   /**
-   * Wrapper for addEventListener.
+   * Find a task by its name and return it if found, otherwise null.
+   * 
+   * @param taskTrackingEntry The entry to search for.
+   * @returns The task if it was found, otherwise null.
    */
-  addEventListener(type: string, callback: EventListenerOrEventListenerObject | null, options?: AddEventListenerOptions | boolean): void {
-    this.eventTarget.addEventListener(type, callback, options);
-  }
-
-  /**
-   * Wrapper for removeEventListener.
-   */
-  removeEventListener(type: string, callback: EventListenerOrEventListenerObject | null, options?: EventListenerOptions | boolean): void {
-    this.eventTarget.removeEventListener(type, callback, options);
-  }
-
   private findReferencedTask(taskTrackingEntry: TaskTrackingEntry): Task | null {
     if (!this.api.index.initialized) {
       console.info("Index not ready skip search");
@@ -85,7 +75,7 @@ export class TaskTrackingService extends Component {
     const taskList = this.api.pages().file.tasks.filter((task: Task) => task.text == taskTrackingEntry.task);
 
     if (taskList.length == 1) {
-      console.info("findReferenedTask [FOUND: Direct]", taskTrackingEntry.task);
+      // console.info("findReferenedTask [FOUND: Direct]", taskTrackingEntry.task);
       return taskList[0];
     }
 
@@ -105,13 +95,19 @@ export class TaskTrackingService extends Component {
       .map((i: LevenshteinMap) => i.task);
 
     if (referencedTask.length > 0) {
-      console.info("findReferenedTask [FOUND: Levensthein]", taskTrackingEntry.task);
+      // console.info("findReferenedTask [FOUND: Levensthein]", taskTrackingEntry.task);
       return referencedTask[0];
     }
 
     return null;
   }
 
+  /**
+   * Updates the cache for a given file.
+   * 
+   * @param abstractFile The file to update the cache for.
+   * @returns True if the cache was updated, false otherwise.
+   */
   private updateCacheForFile(abstractFile: TAbstractFile): boolean {
     const fm = this.plugin.app.metadataCache.getCache(abstractFile.path)?.frontmatter;
 
@@ -140,7 +136,9 @@ export class TaskTrackingService extends Component {
   }
 
   /**
-   * Returns the current running task
+   * Get the currently running task entry or undefined if there is no running task entry.
+   * 
+   * @returns the currently running task entry
    */
   get runningTaskEntry(): TaskListEntry | undefined {
     const runningTask = this.cache.runningTaskEntry;
@@ -243,7 +241,7 @@ export class TaskTrackingService extends Component {
   /**
    * Stops tracking of the current active task.
    */
-  stopRunningTracking() {
+  stopRunningTracking(paused: boolean) {
     const runningTaskEntry = this.cache.runningTaskEntry;
     if (!runningTaskEntry) {
       return;
@@ -259,6 +257,13 @@ export class TaskTrackingService extends Component {
 
         if (itm.task == this.runningTaskEntry?.text && itm.start == this.runningTaskEntry.start?.format('HH:mm')) {
           itm.end = moment().format('HH:mm')
+
+          if (paused) {
+            itm.payload = {
+              ...itm.payload,
+              paused: true,
+            };
+          }
 
           if (itm.start == itm.end) {
             fm[this.FRONT_MATTER_KEY].splice(fm[this.FRONT_MATTER_KEY].indexOf(itm), 1);
@@ -278,7 +283,7 @@ export class TaskTrackingService extends Component {
    * @param taskText Text of the task to start.
    */
   startTracking(taskText: string) {
-    this.stopRunningTracking();
+    this.stopRunningTracking(false);
 
     this.noteService.processFrontMatter(undefined, (fm: FrontMatterCache, file: TFile) => {
       if (!(this.FRONT_MATTER_KEY in fm)) {
@@ -300,6 +305,28 @@ export class TaskTrackingService extends Component {
       }, file.path)
 
       this.eventTarget.dispatchEvent(new ActiveTaskStartedEvent(this.runningTaskEntry));
+    });
+  }
+
+  resumeTracking() {
+    const runningTaskEntry = this.cache.runningTaskEntry;
+    if (runningTaskEntry) {
+      return;
+    }
+
+    this.noteService.processFrontMatter(undefined, (fm: FrontMatterCache) => {
+      if (!fm[this.FRONT_MATTER_KEY]) {
+        return;
+      }
+
+      for (const i of fm[this.FRONT_MATTER_KEY]) {
+        const itm = (i as TaskTrackingEntry);
+
+        if (itm.payload?.paused) {
+          itm.payload.paused = false;
+          this.startTracking(itm.task);
+        }
+      }
     });
   }
 }
