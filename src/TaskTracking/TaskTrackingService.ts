@@ -37,8 +37,27 @@ export class TaskTrackingService extends EventAwareService {
 
   onload(): void {
     this.plugin.registerEvent(this.plugin.app.metadataCache.on('changed', (abstractFile: TAbstractFile) => {
+      let requireDispatch = false;
+
       if (isDailyNote(this.plugin.app, abstractFile)) {
         this.updateCacheForFile(abstractFile);
+        requireDispatch = true;
+      } else {
+        // a bit weird logik since we update the cache by rereading all daily notes that
+        // link to the tasks in update files ..
+        // logic behind tasktracking needs anyway a complete rewrite
+        const taskTrackingItems = this.cache.findTasksInFile(abstractFile.path);
+
+        for (const item of taskTrackingItems) {
+          const aFile = this.plugin.app.vault.getFileByPath(item.file);
+          if (aFile !== null) {
+            this.updateCacheForFile(aFile);
+            requireDispatch = true;
+          }
+        }
+      }
+
+      if (requireDispatch) {
         this.eventTarget.dispatchEvent(new CacheUpdatedEvent());
       }
     }));

@@ -30,6 +30,26 @@ export class TaskTrackingCache extends Component implements Iterable<ReferencedT
   }
 
   /**
+   * Returns a set of TaskTrackingCacheItems that have tasks referencing to cached daily note files.
+   *
+   * @param file File to search in
+   */
+  findTasksInFile(file: string): Set<TaskTrackingCacheItem> {
+    const result = new Set<TaskTrackingCacheItem>();
+
+    for (const trackingCacheItem of this._data.values()) {
+      for (const e of trackingCacheItem.entries) {
+        if (e.taskReference?.path === file) {
+          result.add(trackingCacheItem);
+          break;
+        }
+      }
+    }
+
+    return result;
+  }
+
+  /**
    * Returns the last tracking entry for the given task.
    * 
    * @param taskName Name of task
