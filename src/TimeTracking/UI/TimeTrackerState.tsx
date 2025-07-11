@@ -40,7 +40,7 @@ export const TimeTrackerState = (props: TimeTrackerStateProps) => {
   const state = stateStore.syncExternalStore();
   
   // Show stop button when tracking is active (but not when already stopped)
-  const showStopButton = state === TrackerState.STARTED || state === TrackerState.PAUSE_STOPPED;
+  const showStopButton = state === TrackerState.STARTED || state === TrackerState.PAUSE_STARTED || state === TrackerState.PAUSE_STOPPED;
 
   return (
     <div className="state" onClick={props.onClick}>
