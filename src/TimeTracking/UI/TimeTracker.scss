@@ -59,9 +59,34 @@
       align-items: center;
       min-height: 20px;
       width: 100%;
+      position: relative;
 
       .time {
         padding: 0 10px;
+      }
+
+      .stop-button {
+        position: absolute;
+        top: 0;
+        right: 0;
+        padding: 8px;
+        background-color: var(--interactive-accent);
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        transition: all 0.2s ease;
+
+        &:hover {
+          background-color: var(--interactive-accent-hover);
+          transform: scale(1.1);
+        }
+
+        svg {
+          color: var(--text-on-accent);
+        }
       }
     }
   }

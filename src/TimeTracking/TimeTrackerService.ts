@@ -193,4 +193,25 @@ export class TimeTrackerService extends EventAwareService {
       this.updateState();
     });
   }
+
+  /**
+   * Directly stop the current day's work session.
+   * This sets the work_end time and transitions to STOPPED state.
+   */
+  stopDay(): void {
+    const settings = this.plugin.settings;
+
+    this.noteService.processFrontMatter(undefined, (fm: FrontMatterCache) => {
+      let currentTime = moment();
+      currentTime = currentTime.seconds(0).minutes(
+        currentTime.seconds(0).minutes() - (currentTime.seconds(0).minutes() % 15)
+      )
+      const currentTimeString = currentTime.format("HH:mm");
+
+      // Directly set the work end time to stop the day
+      fm[settings.property_work_end] = currentTimeString;
+
+      this.updateState();
+    });
+  }
 }

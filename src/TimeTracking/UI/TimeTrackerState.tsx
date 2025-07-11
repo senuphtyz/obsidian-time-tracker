@@ -33,13 +33,30 @@ const TimeTrackerStateIcon = (props: TimeTrackerStateIconProps) => {
 export interface TimeTrackerStateProps {
   time: string;
   onClick: () => void;
+  onStopDay: () => void;
 }
 
 export const TimeTrackerState = (props: TimeTrackerStateProps) => {
+  const state = stateStore.syncExternalStore();
+  
+  // Show stop button when tracking is active (but not when already stopped)
+  const showStopButton = state === TrackerState.STARTED || state === TrackerState.PAUSE_STOPPED;
+
   return (
     <div className="state" onClick={props.onClick}>
       <TimeTrackerStateIcon size={50} />
       <span style={{ fontSize: 50 }} className="time">{props.time}</span>
+      {showStopButton && (
+        <div 
+          className="stop-button" 
+          onClick={(e) => {
+            e.stopPropagation(); // Prevent triggering the main onClick
+            props.onStopDay();
+          }}
+        >
+          <Square size={20} />
+        </div>
+      )}
     </div>
   );
 };
