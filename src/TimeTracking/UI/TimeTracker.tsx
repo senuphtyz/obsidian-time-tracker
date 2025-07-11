@@ -6,6 +6,7 @@ import { useCallback, useState } from "react";
 
 export interface TimeTrackerProps {
   onClick: () => void;
+  onStopDay: () => void;
 }
 
 export const TimeTracker = (props: TimeTrackerProps) => {
@@ -51,7 +52,7 @@ export const TimeTracker = (props: TimeTrackerProps) => {
       </div>
 
       <div className="control">
-        <TimeTrackerState time={runningTime} onClick={() => props.onClick()} />
+        <TimeTrackerState time={runningTime} onClick={() => props.onClick()} onStopDay={() => props.onStopDay()} />
       </div>
     </div>
   )
