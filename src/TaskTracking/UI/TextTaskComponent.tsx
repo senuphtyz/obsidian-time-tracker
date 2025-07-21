@@ -18,7 +18,7 @@ export const TextTaskComponent = (prop: TextTaskComponentProps) => {
       <button disabled={prop.filter == ""} onClick={() => { prop.onStart({ last: null, path: "", start: moment(), text: prop.filter }) }}>
         <Play
           size="18"
-          color="var(--color-green)"
+          color="#006400"
           style={{ marginBottom: "-1px" }}
         />
       </button>

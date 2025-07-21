@@ -17,7 +17,7 @@ export const TaskComponent = (prop: TaskComponentProps) => {
       <button onClick={() => { prop.onStartTask(prop.task) }}>
         <Play
           size="18"
-          color="var(--color-green)"
+          color="#006400"
           style={{ marginBottom: "-1px" }}
         />
       </button>

@@ -15,13 +15,13 @@ const TimeTrackerStateIcon = (props: TimeTrackerStateIconProps) => {
       return <AlarmClockPlus size={props.size} />
 
     case TrackerState.STARTED:
-      return <Play size={props.size} />
+      return <Play size={props.size} color="#006400" />
 
     case TrackerState.PAUSE_STARTED:
       return <Pause size={props.size} />
 
     case TrackerState.PAUSE_STOPPED:
-      return <Play size={props.size} />
+      return <Play size={props.size} color="#006400" />
 
     case TrackerState.STOPPED:
       return <Square size={props.size} />
