@@ -79,6 +79,7 @@ export class TaskTrackingService extends EventAwareService {
     }
   }
 
+
   /**
    * Find a task by its name and return it if found, otherwise null.
    * 

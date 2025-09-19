@@ -77,6 +77,41 @@ export default class TimeTrackerSettingTab extends PluginSettingTab {
   }
 
 
+  addTaskTrackingSettings(containerEl: HTMLElement): void {
+    new Setting(containerEl)
+      .setHeading()
+      .setName("Task Tracking");
+
+
+    new Setting(containerEl)
+      .setName("Enable")
+      .setDesc("Enables sync command to sync todays worktime with MobaTime")
+      .addToggle(t => t
+        .setValue(this.plugin.settings.task_tracking.enabled)
+        .onChange(async (value) => {
+          this.plugin.settings.task_tracking.enabled = value;
+          await this.plugin.saveSettings();
+          this.refreshDisplay();
+        })
+      )
+
+    if (!this.plugin.settings.task_tracking.enabled) {
+      return;
+    }
+
+    new Setting(containerEl)
+      .setName('Auto task transition')
+      .setDesc('Automatic task transition on pausing or resuming time tracking')
+      .addToggle((toggle) => {
+        toggle
+          .setValue(this.plugin.settings.task_tracking.auto_task_transition)
+          .onChange(async (value) => {
+            this.plugin.settings.task_tracking.auto_task_transition = value;
+            await this.plugin.saveSettings();
+          });
+      });
+  }
+
   refreshDisplay(): void {
     const { containerEl } = this;
 
@@ -153,18 +188,6 @@ export default class TimeTrackerSettingTab extends PluginSettingTab {
           this.plugin.settings.property_work_end = value;
           await this.plugin.saveSettings();
         }));
-
-    new Setting(containerEl)
-      .setName('Auto task transition')
-      .setDesc('Automatic task transition on pausing or resuming time tracking')
-      .addToggle((toggle) => {
-        toggle
-          .setValue(this.plugin.settings.auto_task_transition)
-          .onChange(async (value) => {
-            this.plugin.settings.auto_task_transition = value;
-            await this.plugin.saveSettings();
-          });
-      });
 
     this.addMobaTimeSettings(containerEl);
   }

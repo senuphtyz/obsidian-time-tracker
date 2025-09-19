@@ -1,4 +1,5 @@
 import type MobaTimeSettings from "./MobaTimeSettings";
+import type TaskTrackingSettings from "./TaskTrackingSettings";
 
 
 interface TimeTrackerSettings {
@@ -9,8 +10,8 @@ interface TimeTrackerSettings {
   time_format: string;
   date_format: string;
   datetime_format: string;
-  auto_task_transition: boolean
   moba: MobaTimeSettings;
+  task_tracking: TaskTrackingSettings;
 }
 
 const DEFAULT_SETTINGS: TimeTrackerSettings = {
@@ -21,7 +22,10 @@ const DEFAULT_SETTINGS: TimeTrackerSettings = {
   time_format: "HH:mm",
   date_format: "DD.MM.YYYY",
   datetime_format: "DD.MM.YYYY HH:mm",
-  auto_task_transition: true,
+  task_tracking: {
+    enabled: true,
+    auto_task_transition: true,
+  },
   moba: {
     enabled: false,
     url: "",
@@ -32,4 +36,4 @@ const DEFAULT_SETTINGS: TimeTrackerSettings = {
 }
 
 export { DEFAULT_SETTINGS };
-export type { TimeTrackerSettings, MobaTimeSettings };
+export type { TimeTrackerSettings, MobaTimeSettings, TaskTrackingSettings };

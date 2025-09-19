@@ -16,6 +16,7 @@ import { TimeTrackerService } from './TimeTracking/TimeTrackerService';
  */
 export default class TimeTrackerPlugin extends Plugin {
   public settings: TimeTrackerSettings = DEFAULT_SETTINGS;
+  public preSaveSettings: TimeTrackerSettings = DEFAULT_SETTINGS;
   public readonly taskTrackingService: TaskTrackingService;
   public readonly timeTrackingService: TimeTrackerService;
   public readonly noteService: NoteService;
@@ -31,10 +32,6 @@ export default class TimeTrackerPlugin extends Plugin {
     const dataviewApi = getAPI(app);
     this.taskTrackingService = new TaskTrackingService(this, this.cache, dataviewApi, this.noteService);
     this.timeTrackingService = new TimeTrackerService(this, dataviewApi, this.noteService);
-
-    this.addChild(this.cache);
-    this.addChild(this.taskTrackingService);
-    this.addChild(this.timeTrackingService);
   }
 
   /**
@@ -46,20 +43,33 @@ export default class TimeTrackerPlugin extends Plugin {
   async onload() {
     await this.loadSettings();
 
-    this.registerView(TaskTrackingViewType, (leaf) => new TaskTrackingView(leaf, this));
+    this.addChild(this.cache);
+    this.addChild(this.timeTrackingService);
+
     this.registerView(TimeTrackerViewType, (leaf) => new TimeTrackerView(leaf, this));
+
+    if (this.settings.task_tracking.enabled) {
+      this.initializeTaskTracker();
+    }
 
     this.statusBar = new StatusBarTime(this.app, this);
     this.commandHandler = new CommandHandler(this.app, this);
     this.addSettingTab(new TimeTrackerSettingTab(this.app, this));
 
     this.commandHandler.register();
-    this.addRibbonIcon("dice", "Show task tracker view", () => {
-      this.activateView(TaskTrackingViewType);
-    });
 
     this.addRibbonIcon("clock", "Show time tracker view", () => {
       this.activateView(TimeTrackerViewType);
+    });
+  }
+
+  private initializeTaskTracker(): void {
+    this.addChild(this.taskTrackingService);
+
+    this.registerView(TaskTrackingViewType, (leaf) => new TaskTrackingView(leaf, this));
+
+    this.addRibbonIcon("dice", "Show task tracker view", () => {
+      this.activateView(TaskTrackingViewType);
     });
   }
 
@@ -90,9 +100,16 @@ export default class TimeTrackerPlugin extends Plugin {
 
   async loadSettings() {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    this.preSaveSettings = Object.assign({}, this.settings);
   }
 
   async saveSettings() {
+    if (this.preSaveSettings.task_tracking.enabled != this.settings.task_tracking.enabled) {
+      if (this.settings.task_tracking.enabled) {
+        this.initializeTaskTracker();
+      }
+    }
+
     await this.saveData(this.settings);
   }
 }
