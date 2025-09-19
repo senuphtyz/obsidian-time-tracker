@@ -189,6 +189,7 @@ export default class TimeTrackerSettingTab extends PluginSettingTab {
           await this.plugin.saveSettings();
         }));
 
+    this.addTaskTrackingSettings(containerEl);
     this.addMobaTimeSettings(containerEl);
   }
 
