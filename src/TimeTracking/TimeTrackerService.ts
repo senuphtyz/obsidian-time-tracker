@@ -171,11 +171,7 @@ export class TimeTrackerService extends EventAwareService {
     const settings = this.plugin.settings;
 
     this.noteService.processFrontMatter(undefined, (fm: FrontMatterCache) => {
-      let currentTime = moment();
-      currentTime = currentTime.seconds(0).minutes(
-        currentTime.seconds(0).minutes() - (currentTime.seconds(0).minutes() % 15)
-      )
-      const currentTimeString = currentTime.format("HH:mm");
+      const currentTimeString = this.getRoundedCurrentTime();
 
       if (this.trackerState === undefined || this.trackerState === TrackerState.NOT_RUNNING) {
         // change from NOT_RUNNING to STARTED
@@ -189,6 +185,45 @@ export class TimeTrackerService extends EventAwareService {
       } else if (this.trackerState === TrackerState.PAUSE_STOPPED || this.trackerState === TrackerState.STOPPED) {
         fm[settings.property_work_end] = currentTimeString;
       }
+
+      this.updateState();
+    });
+  }
+
+  /**
+   * Get rounded current time in HH:mm format (rounds to 15-minute intervals).
+   */
+  private getRoundedCurrentTime(): string {
+    let currentTime = moment();
+    currentTime = currentTime.seconds(0).minutes(
+      currentTime.seconds(0).minutes() - (currentTime.seconds(0).minutes() % 15)
+    );
+    return currentTime.format("HH:mm");
+  }
+
+  /**
+   * Directly stop the current day's work session.
+   * This sets the work_end time and transitions to STOPPED state.
+   * If in PAUSE_STARTED state, uses pause_start time as the stop time.
+   */
+  stopDay(): void {
+    const settings = this.plugin.settings;
+
+    this.noteService.processFrontMatter(undefined, (fm: FrontMatterCache) => {
+      let stopTime: string;
+      
+      // If we're in PAUSE_STARTED state, use the pause_start time as stop time
+      if (this.trackerState === TrackerState.PAUSE_STARTED) {
+        stopTime = fm[settings.property_pause_start];
+        // Clear the pause_start since we're stopping instead of continuing the pause
+        delete fm[settings.property_pause_start];
+      } else {
+        // Otherwise use current rounded time
+        stopTime = this.getRoundedCurrentTime();
+      }
+
+      // Set the work end time to stop the day
+      fm[settings.property_work_end] = stopTime;
 
       this.updateState();
     });

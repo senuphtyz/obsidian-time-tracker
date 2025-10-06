@@ -70,6 +70,10 @@ export class TimeTrackerView extends ItemView {
     this.plugin.timeTrackingService.storeTime();
   }
 
+  onStopDay(): void {
+    this.plugin.timeTrackingService.stopDay();
+  }
+
   async onOpen(): Promise<void> {
     const appContext: AppContextValue = {
       settings: this.plugin.settings,
@@ -79,7 +83,7 @@ export class TimeTrackerView extends ItemView {
     this.root?.render(
       <StrictMode>
         <AppContext.Provider value={appContext}>
-          <TimeTracker onClick={() => this.onEvent()} />
+          <TimeTracker onClick={() => this.onEvent()} onStopDay={() => this.onStopDay()} />
         </AppContext.Provider>
       </StrictMode>
     )
